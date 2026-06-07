@@ -160,6 +160,15 @@ O relatório técnico detalhado do projeto está disponível em [RELATORIO_TECNI
   <img src="Screenshot_20260530_180008.png" width="210" />
 </p>
 
-## Autor
+## Autores
 
 Projeto acadêmico — Disciplina de Programação Mobile, UNASP
+
+| Nome | RA |
+|---|---|
+| Felipe Guilherme Teodolino | 212392 |
+| Carlos Eduardo Santos Silva | 213032 |
+| Carlos Eduardo Brandão Souza | 202493 |
+| Phelippe Oliveira Santos | 211268 |
+| Vinicios Santos Silva | 212553 |
+| Caio Santos Ferreira | 209281 |

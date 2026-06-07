@@ -2,8 +2,18 @@
 
 **Disciplina:** Programação Mobile  
 **Instituição:** UNASP — Centro Universitário Adventista de São Paulo  
-**Aluno:** Felipe Teodolino  
 **Tecnologia:** Android (Kotlin + Jetpack Compose)
+
+**Integrantes:**
+
+| Nome | RA |
+|---|---|
+| Felipe Guilherme Teodolino | 212392 |
+| Carlos Eduardo Santos Silva | 213032 |
+| Carlos Eduardo Brandão Souza | 202493 |
+| Phelippe Oliveira Santos | 211268 |
+| Vinicios Santos Silva | 212553 |
+| Caio Santos Ferreira | 209281 |
 
 ---
 
