@@ -9,6 +9,18 @@
 
 ---
 
+<p align="center">
+  <b>Felipe Guilherme Teodolino</b> · RA 212392 &nbsp;|&nbsp;
+  <b>Carlos Eduardo Santos Silva</b> · RA 213032 &nbsp;|&nbsp;
+  <b>Carlos Eduardo Brandão Souza</b> · RA 202493<br/>
+  <b>Phelippe Oliveira Santos</b> · RA 211268 &nbsp;|&nbsp;
+  <b>Vinicios Santos Silva</b> · RA 212553 &nbsp;|&nbsp;
+  <b>Caio Santos Ferreira</b> · RA 209281<br/>
+  <sub>Disciplina de Programação Mobile — UNASP</sub>
+</p>
+
+---
+
 ## Descrição
 
 CresUp transforma o controle financeiro em uma experiência moderna, motivadora e visualmente premium. Inspirado em Duolingo, Revolut e Monzo, o app é direcionado à Geração Z e jovens adultos que querem evoluir financeiramente de forma engajante.
