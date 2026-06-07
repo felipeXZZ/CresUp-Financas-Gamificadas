@@ -226,7 +226,21 @@ Sistema implementado no modelo `User` e distribuído pelos ViewModels:
 
 ---
 
-## 10. Desafios e Soluções
+## 10. Publicação e Distribuição
+
+O aplicativo foi empacotado como **Android App Bundle (AAB) assinado** (`app-release.aab`, ~21 MB) seguindo as exigências da Google Play Store.
+
+**Pipeline de release:**
+1. Keystore gerada com `keytool` (RSA 2048, validade 10.000 dias)
+2. `build.gradle.kts` configurado com `signingConfigs { release { ... } }` lendo credenciais de `keystore.properties` (excluído do git via `.gitignore`)
+3. AAB gerado via **Android Studio → Build → Generate Signed Bundle**
+4. App publicado na Google Play Store em **teste fechado** com 12 testadores internos
+
+O ícone do aplicativo segue os padrões visuais do Android: fundo preto com logotipo "C" em verde neon, disponível em todas as densidades de tela (`mipmap-*`) e em formato adaptativo (`ic_launcher.xml`).
+
+---
+
+## 11. Desafios e Soluções
 
 **UI consistente em dark mode permanente**  
 Solução: `CresUpColorScheme` customizado definido em `Color.kt`, aplicado diretamente nos Composables sem depender das cores geradas pelo Material You (que variam com o tema do dispositivo).

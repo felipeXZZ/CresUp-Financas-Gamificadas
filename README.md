@@ -147,13 +147,17 @@ app/src/main/java/com/cresup/app/
 - Snackbars para feedback de sucesso e erro
 - Estados de vazio com ilustrações
 
-## Geração de APK
+## Distribuição
 
-No Android Studio: **Build → Build Bundle(s) / APK(s) → Build APK(s)**
+O app está publicado na **Google Play Store** em teste fechado (12 testadores).
+
+O pacote de distribuição `app-release.aab` (AAB assinado, ~21 MB) foi gerado via:
+
+**Android Studio → Build → Generate Signed Bundle / APK → Android App Bundle**
 
 Ou via terminal:
 ```bash
-./gradlew assembleRelease
+./gradlew bundleRelease
 ```
 
 ## Relatório Técnico
