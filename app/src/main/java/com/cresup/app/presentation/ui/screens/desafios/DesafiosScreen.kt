@@ -230,7 +230,7 @@ private fun ChallengeCard(
                         onClick = onActivate,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
                         border = BorderStroke(1.dp, NeonGreen.copy(alpha = 0.5f))
                     ) {
                         Text("Aceitar Desafio ⚡")

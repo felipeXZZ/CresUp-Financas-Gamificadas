@@ -5,7 +5,7 @@ data class User(
     val name: String = "",
     val avatarEmoji: String = "🦁",
     val level: Int = 1,
-    val levelName: String = "Rookie Saver",
+    val levelName: String = "Poupador Iniciante",
     val xp: Int = 0,
     val xpToNextLevel: Int = 500,
     val streakDays: Int = 0,
@@ -18,17 +18,17 @@ data class User(
 fun User.levelProgress(): Float = (xp.toFloat() / xpToNextLevel).coerceIn(0f, 1f)
 
 fun User.nextLevel(): String = when (level) {
-    1 -> "Money Builder"
-    2 -> "Wealth Pro"
-    3 -> "Financial Elite"
-    else -> "Financial Elite"
+    1 -> "Construtor de Riqueza"
+    2 -> "Especialista Financeiro"
+    3 -> "Elite Financeira"
+    else -> "Elite Financeira"
 }
 
 fun computeLevel(xp: Int): Pair<Int, String> = when {
-    xp < 500  -> 1 to "Rookie Saver"
-    xp < 1500 -> 2 to "Money Builder"
-    xp < 3500 -> 3 to "Wealth Pro"
-    else      -> 4 to "Financial Elite"
+    xp < 500  -> 1 to "Poupador Iniciante"
+    xp < 1500 -> 2 to "Construtor de Riqueza"
+    xp < 3500 -> 3 to "Especialista Financeiro"
+    else      -> 4 to "Elite Financeira"
 }
 
 fun xpToNextLevel(level: Int): Int = when (level) {

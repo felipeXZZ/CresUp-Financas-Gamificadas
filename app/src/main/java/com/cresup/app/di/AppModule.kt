@@ -7,17 +7,19 @@ import com.cresup.app.data.local.dao.ChallengeDao
 import com.cresup.app.data.local.dao.GoalDao
 import com.cresup.app.data.local.dao.TransactionDao
 import com.cresup.app.data.local.dao.UserDao
+import com.cresup.app.data.remote.firebase.FirestoreChallengeRepository
+import com.cresup.app.data.remote.firebase.FirestoreGoalRepository
+import com.cresup.app.data.remote.firebase.FirestoreTransactionRepository
+import com.cresup.app.data.remote.firebase.FirestoreUserRepository
 import com.cresup.app.data.remote.api.QuoteApi
-import com.cresup.app.data.repository.ChallengeRepositoryImpl
-import com.cresup.app.data.repository.GoalRepositoryImpl
 import com.cresup.app.data.repository.QuoteRepositoryImpl
-import com.cresup.app.data.repository.TransactionRepositoryImpl
-import com.cresup.app.data.repository.UserRepositoryImpl
 import com.cresup.app.domain.repository.ChallengeRepository
 import com.cresup.app.domain.repository.GoalRepository
 import com.cresup.app.domain.repository.QuoteRepository
 import com.cresup.app.domain.repository.TransactionRepository
 import com.cresup.app.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,6 +35,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    // ─── Room (mantido para fins acadêmicos) ──────────────────────────────────
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): AppDatabase =
@@ -45,12 +49,12 @@ object AppModule {
     @Provides fun provideGoalDao(db: AppDatabase): GoalDao = db.goalDao()
     @Provides fun provideChallengeDao(db: AppDatabase): ChallengeDao = db.challengeDao()
 
+    // ─── Rede (Retrofit) ──────────────────────────────────────────────────────
+
     @Provides
     @Singleton
     fun provideOkHttp(): OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
+        .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
         .build()
 
     @Provides
@@ -63,24 +67,35 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideQuoteApi(retrofit: Retrofit): QuoteApi =
-        retrofit.create(QuoteApi::class.java)
+    fun provideQuoteApi(retrofit: Retrofit): QuoteApi = retrofit.create(QuoteApi::class.java)
+
+    // ─── Firebase ─────────────────────────────────────────────────────────────
 
     @Provides
     @Singleton
-    fun provideUserRepository(impl: UserRepositoryImpl): UserRepository = impl
+    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
     @Provides
     @Singleton
-    fun provideTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository = impl
+    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    // ─── Repositórios (Firestore) ─────────────────────────────────────────────
 
     @Provides
     @Singleton
-    fun provideGoalRepository(impl: GoalRepositoryImpl): GoalRepository = impl
+    fun provideUserRepository(impl: FirestoreUserRepository): UserRepository = impl
 
     @Provides
     @Singleton
-    fun provideChallengeRepository(impl: ChallengeRepositoryImpl): ChallengeRepository = impl
+    fun provideTransactionRepository(impl: FirestoreTransactionRepository): TransactionRepository = impl
+
+    @Provides
+    @Singleton
+    fun provideGoalRepository(impl: FirestoreGoalRepository): GoalRepository = impl
+
+    @Provides
+    @Singleton
+    fun provideChallengeRepository(impl: FirestoreChallengeRepository): ChallengeRepository = impl
 
     @Provides
     @Singleton

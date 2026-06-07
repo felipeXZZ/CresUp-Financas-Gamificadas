@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cresup.app.domain.model.Transaction
 import com.cresup.app.domain.model.TransactionCategory
 import com.cresup.app.domain.model.TransactionType
+import com.cresup.app.presentation.ui.components.CurrencyVisualTransformation
 import com.cresup.app.presentation.ui.components.GlassCard
 import com.cresup.app.presentation.ui.components.TransactionItem
 import com.cresup.app.presentation.ui.screens.dashboard.formatCurrency
@@ -287,9 +288,10 @@ private fun AddTransactionDialog(
 
                 OutlinedTextField(
                     value = amount,
-                    onValueChange = { amount = it },
+                    onValueChange = { amount = it.filter(Char::isDigit).trimStart('0').ifEmpty { "" } },
                     label = { Text("Valor (R$)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    visualTransformation = CurrencyVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = dialogFieldColors(),
                     shape = RoundedCornerShape(12.dp),

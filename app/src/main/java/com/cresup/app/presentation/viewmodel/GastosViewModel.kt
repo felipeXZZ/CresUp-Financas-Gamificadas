@@ -53,12 +53,12 @@ class GastosViewModel @Inject constructor(
         category: TransactionCategory,
         note: String
     ) {
-        val amount = amountText.replace(",", ".").toDoubleOrNull()
+        val amount = (amountText.toLongOrNull() ?: 0L) / 100.0
         if (title.isBlank()) {
             _state.update { it.copy(errorMessage = "Informe um título para a transação") }
             return
         }
-        if (amount == null || amount <= 0) {
+        if (amount <= 0) {
             _state.update { it.copy(errorMessage = "Informe um valor válido") }
             return
         }

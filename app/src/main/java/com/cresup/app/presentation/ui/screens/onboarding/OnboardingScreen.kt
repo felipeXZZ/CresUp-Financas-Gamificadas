@@ -1,6 +1,7 @@
 package com.cresup.app.presentation.ui.screens.onboarding
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -13,10 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cresup.app.R
 import com.cresup.app.presentation.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -32,7 +36,7 @@ val onboardingPages = listOf(
         emoji = "📊",
         title = "Controle seus gastos",
         subtitle = "Registre receitas e despesas com categorias modernas e visualize para onde seu dinheiro vai.",
-        gradient = listOf(NeonBlue.copy(0.2f), Background)
+        gradient = listOf(GreenDark.copy(0.25f), Background)
     ),
     OnboardingPage(
         emoji = "🎯",
@@ -50,7 +54,7 @@ val onboardingPages = listOf(
         emoji = "⚡",
         title = "Aceite desafios",
         subtitle = "Complete desafios financeiros, desbloqueie conquistas e transforme sua relação com o dinheiro.",
-        gradient = listOf(AccentOrange.copy(0.15f), Background)
+        gradient = listOf(NeonGreenDim.copy(0.2f), Background)
     )
 )
 
@@ -77,26 +81,34 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(32.dp),
+                        .padding(horizontal = 32.dp)
+                        .padding(top = 60.dp, bottom = 160.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = data.emoji, fontSize = 80.sp)
+                    Image(
+                        painter = painterResource(id = R.drawable.cresup_icon),
+                        contentDescription = "CresUp",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(72.dp)
+                    )
                     Spacer(Modifier.height(32.dp))
+                    Text(text = data.emoji, fontSize = 72.sp)
+                    Spacer(Modifier.height(28.dp))
                     Text(
                         text = data.title,
-                        fontSize = 28.sp,
+                        fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(14.dp))
                     Text(
                         text = data.subtitle,
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
-                        lineHeight = 24.sp
+                        lineHeight = 23.sp
                     )
                 }
             }

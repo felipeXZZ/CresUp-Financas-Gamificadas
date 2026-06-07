@@ -5,26 +5,26 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Green neon background circle -->
+    <!-- Círculo de fundo verde escuro (cor da logo) -->
     <path
-        android:fillColor="#00FF87"
+        android:fillColor="#33B81A"
         android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0" />
 
-    <!-- Chart line icon (simplified) -->
+    <!-- Arco externo do G -->
     <path
-        android:strokeColor="#0A0A0F"
-        android:strokeWidth="4"
+        android:strokeColor="#A8E040"
+        android:strokeWidth="5.5"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M32,68 L44,52 L56,60 L68,38 L76,44" />
+        android:pathData="M72,40 A22,22 0,1,0 72,68 L72,57 L58,57" />
 
-    <!-- Arrow up -->
+    <!-- Seta diagonal (para cima-direita, característica da logo) -->
     <path
-        android:strokeColor="#0A0A0F"
-        android:strokeWidth="4"
+        android:strokeColor="#A8E040"
+        android:strokeWidth="5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M70,38 L76,44 M76,44 L76,38" />
+        android:pathData="M65,51 L75,41 M75,41 L75,49 M75,41 L67,41" />
+
 </vector>

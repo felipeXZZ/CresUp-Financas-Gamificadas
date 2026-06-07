@@ -40,8 +40,8 @@ class MetasViewModel @Inject constructor(
             _state.update { it.copy(errorMessage = "Informe um título para a meta") }
             return
         }
-        val target = targetText.replace(",", ".").toDoubleOrNull()
-        if (target == null || target <= 0) {
+        val target = (targetText.toLongOrNull() ?: 0L) / 100.0
+        if (target <= 0) {
             _state.update { it.copy(errorMessage = "Informe um valor alvo válido") }
             return
         }
@@ -57,8 +57,8 @@ class MetasViewModel @Inject constructor(
     }
 
     fun contribute(goalId: Long, amountText: String) {
-        val amount = amountText.replace(",", ".").toDoubleOrNull()
-        if (amount == null || amount <= 0) {
+        val amount = (amountText.toLongOrNull() ?: 0L) / 100.0
+        if (amount <= 0) {
             _state.update { it.copy(errorMessage = "Informe um valor válido") }
             return
         }

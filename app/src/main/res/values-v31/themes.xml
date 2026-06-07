@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CresUp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/black</item>
+
+        <!-- Splash screen do sistema (Android 12+) -->
+        <item name="android:windowSplashScreenBackground">#0A0A0A</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/cresup_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#0A0A0A</item>
+    </style>
+</resources>

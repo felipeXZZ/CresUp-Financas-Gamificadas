@@ -24,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.cresup.app.R
 import com.cresup.app.domain.model.*
 import com.cresup.app.presentation.ui.components.*
 import com.cresup.app.presentation.ui.theme.*
@@ -89,8 +92,8 @@ private fun DashboardHeader(user: User, balance: Double) {
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(NeonBlue.copy(alpha = 0.2f), Background),
-                    endY = 400f
+                    colors = listOf(GreenDark.copy(alpha = 0.25f), Background),
+                    endY = 450f
                 )
             )
             .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -98,24 +101,23 @@ private fun DashboardHeader(user: User, balance: Double) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "Olá, ${user.name} ${user.avatarEmoji}",
-                        fontSize = 14.sp,
-                        color = TextSecondary
-                    )
-                    Text(
-                        text = "Seu Saldo",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                }
                 StreakBadge(streakDays = user.streakDays)
             }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Olá, ${user.name} ${user.avatarEmoji}",
+                fontSize = 14.sp,
+                color = TextSecondary
+            )
+            Text(
+                text = "Seu Saldo",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
             Spacer(Modifier.height(12.dp))
             Text(
                 text = formatCurrency(balance),

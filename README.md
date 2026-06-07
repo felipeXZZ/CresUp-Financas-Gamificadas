@@ -10,12 +10,14 @@ CresUp transforma o controle financeiro em uma experiência moderna, motivadora 
 
 | Tecnologia | Versão | Uso |
 |---|---|---|
-| Kotlin | 2.0.21 | Linguagem principal |
+| Kotlin | 2.1.0 | Linguagem principal |
 | Jetpack Compose | BOM 2024.12 | Interface declarativa |
 | Material Design 3 | — | Sistema de design |
 | MVVM + Clean Architecture | — | Arquitetura |
 | Hilt | 2.51.1 | Injeção de dependência |
-| Room | 2.6.1 | Persistência local |
+| Room | 2.6.1 | Persistência local (SQLite) |
+| Firebase Firestore | BOM 33.10 | Banco de dados em nuvem |
+| Firebase Auth | BOM 33.10 | Autenticação |
 | Retrofit + OkHttp | 2.11 / 4.12 | Consumo de API REST |
 | Coroutines + StateFlow | 1.9.0 | Assincronismo |
 | Navigation Compose | 2.8.5 | Navegação entre telas |
@@ -67,7 +69,7 @@ app/src/main/java/com/cresup/app/
 - Progresso de XP e nível do usuário
 - Streak de dias ativos
 - Meta ativa com barra de progresso
-- Frase motivacional via API (ZenQuotes)
+- Frase motivacional via API (ZenQuotes, com fallback local)
 - Últimas transações
 
 ### Gastos
@@ -110,19 +112,19 @@ app/src/main/java/com/cresup/app/
 
 | Nível | Nome | XP necessário |
 |---|---|---|
-| 1 | Rookie Saver | 0 – 499 |
-| 2 | Money Builder | 500 – 1499 |
-| 3 | Wealth Pro | 1500 – 3499 |
-| 4 | Financial Elite | 3500+ |
+| 1 | Poupador Iniciante | 0 – 499 |
+| 2 | Construtor de Riqueza | 500 – 1499 |
+| 3 | Especialista Financeiro | 1500 – 3499 |
+| 4 | Elite Financeira | 3500+ |
 
 ## API Utilizada
 
-[ZenQuotes API](https://zenquotes.io) — frases motivacionais aleatórias (`GET /api/random`). Fallback local para quando offline.
+**ZenQuotes API** — frases motivacionais aleatórias (`GET https://zenquotes.io/api/random`), consumida via Retrofit + OkHttp. Em caso de falha de rede, o app exibe automaticamente uma das 12 frases motivacionais em português armazenadas localmente.
 
 ## Tratamento de Erros
 
 - Validação em todos os formulários com mensagens claras
-- Fallback local para API de frases motivacionais
+- Fallback local em português para API de frases motivacionais
 - Snackbars para feedback de sucesso e erro
 - Estados de vazio com ilustrações
 
@@ -137,26 +139,7 @@ Ou via terminal:
 
 ## Relatório Técnico
 
-### Arquitetura
-Adotamos Clean Architecture com MVVM para separar claramente as responsabilidades. A camada `domain` é independente de framework, permitindo testes unitários sem Android SDK. A camada `presentation` usa StateFlow + `collectAsStateWithLifecycle` para reatividade eficiente com ciclo de vida.
-
-### Justificativa do Room
-Room foi escolhido como banco de dados principal por:
-- Integração nativa com Flow (streams reativos)
-- Type-safe queries via DAO com verificação em compile-time
-- Suporte a migrations estruturadas
-- Requisito acadêmico explícito de persistência local robusta
-
-### Bibliotecas
-- **Hilt**: DI padrão Android, reduz boilerplate de injeção de dependência
-- **Retrofit**: cliente HTTP type-safe, integração nativa com Coroutines
-- **Coil**: carregamento de imagens otimizado para Compose
-- **Navigation Compose**: navegação type-safe com suporte a animações
-
-### Desafios e Soluções
-- **UI consistente em dark mode**: criamos `CresUpColorScheme` customizado além do MaterialTheme padrão, exposto via `CompositionLocal`
-- **Progressão reativa de XP**: XP é atualizado via SQL direto no Room e o Flow do usuário propaga automaticamente para todas as telas
-- **Swipe to delete**: uso do `SwipeToDismissBox` do Material 3 com feedback visual de background vermelho
+O relatório técnico detalhado do projeto está disponível em [RELATORIO_TECNICO.md](RELATORIO_TECNICO.md).
 
 ## Capturas de Tela
 

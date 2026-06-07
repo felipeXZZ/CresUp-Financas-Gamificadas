@@ -12,7 +12,7 @@ data class UserEntity(
     val name: String = "Usuário",
     val avatarEmoji: String = "🦁",
     val level: Int = 1,
-    val levelName: String = "Rookie Saver",
+    val levelName: String = "Poupador Iniciante",
     val xp: Int = 0,
     val xpToNextLevel: Int = 500,
     val streakDays: Int = 0,

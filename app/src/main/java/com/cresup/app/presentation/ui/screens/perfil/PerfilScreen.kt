@@ -34,9 +34,13 @@ import com.cresup.app.presentation.ui.theme.*
 import com.cresup.app.presentation.viewmodel.PerfilViewModel
 
 @Composable
-fun PerfilScreen(viewModel: PerfilViewModel = hiltViewModel()) {
+fun PerfilScreen(
+    onLogout: () -> Unit = {},
+    viewModel: PerfilViewModel = hiltViewModel()
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.successMessage) {
         state.successMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessage() }
@@ -77,7 +81,44 @@ fun PerfilScreen(viewModel: PerfilViewModel = hiltViewModel()) {
                     repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
+            item {
+                Spacer(Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                ) {
+                    Icon(Icons.Filled.Logout, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Sair da Conta", fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            containerColor = SurfaceVariant,
+            title = { Text("Sair da conta?", fontWeight = FontWeight.Bold, color = TextPrimary) },
+            text = { Text("Você precisará fazer login novamente.", color = TextSecondary) },
+            confirmButton = {
+                Button(
+                    onClick = { showLogoutDialog = false; onLogout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Sair", fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar", color = TextMuted)
+                }
+            }
+        )
     }
 
     if (state.isEditingName) {

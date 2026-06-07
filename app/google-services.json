@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "92401103548",
+    "project_id": "cresup-15063",
+    "storage_bucket": "cresup-15063.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:92401103548:android:09a609490445cea87d96b9",
+        "android_client_info": {
+          "package_name": "com.cresup.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "92401103548-ir1hqlv0sb42d3nq47dairggmtf1b562.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cresup.app",
+            "certificate_hash": "f2cae5170bb54ae7f8d1a56f109430fc1763bb5b"
+          }
+        },
+        {
+          "client_id": "92401103548-73mss33vkiqov0qkdup0uip8l6gm4i49.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJ6aysCUpVIwsXUhFaRrY1DF2Tth2ZY0Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "92401103548-73mss33vkiqov0qkdup0uip8l6gm4i49.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

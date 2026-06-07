@@ -8,19 +8,26 @@ class QuoteRepositoryImpl @Inject constructor(
     private val api: QuoteApi
 ) : QuoteRepository {
 
-    private val fallbackQuotes = listOf(
-        "Discipline is the bridge between goals and accomplishment.",
-        "A penny saved is a penny earned.",
-        "Do not save what is left after spending, but spend what is left after saving.",
-        "Financial freedom is available to those who learn about it and work for it.",
-        "The secret to wealth is simple: find a way to do more for others than anyone else does.",
-        "It's not your salary that makes you rich, it's your spending habits."
+    private val fallback = listOf(
+        "A disciplina é a ponte entre metas e realizações.",
+        "Não poupe o que sobra depois de gastar; gaste o que sobra depois de poupar.",
+        "Pequenas economias diárias constroem grandes fortunas.",
+        "A liberdade financeira começa com uma decisão tomada hoje.",
+        "Quem controla seu dinheiro, controla seu futuro.",
+        "Investir em conhecimento sempre rende os melhores juros.",
+        "O segredo da riqueza está em gastar menos do que você ganha.",
+        "Cada real poupado é um passo em direção à sua independência.",
+        "Cuide do seu dinheiro hoje para que ele cuide de você amanhã.",
+        "O hábito de poupar é mais poderoso do que qualquer salário.",
+        "Sonhos têm preço — comece a pagar agora, pouco a pouco.",
+        "Finanças saudáveis começam com escolhas conscientes."
     )
 
-    override suspend fun getMotivationalQuote(): Result<String> = runCatching {
-        val quotes = api.getRandomQuote()
-        quotes.firstOrNull()?.quote ?: fallbackQuotes.random()
-    }.recoverCatching {
-        fallbackQuotes.random()
+    override suspend fun getMotivationalQuote(): Result<String> = try {
+        val quote = api.getRandomQuote().firstOrNull()?.quote
+        if (quote.isNullOrBlank()) Result.success(fallback.random())
+        else Result.success(quote)
+    } catch (e: Exception) {
+        Result.success(fallback.random())
     }
 }
