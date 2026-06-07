@@ -1,4 +1,4 @@
-<img src="CRESUPLOGO.png" width="100%" alt="CresUp Banner" />
+<img src="images/CRESUPLOGO.png" width="100%" alt="CresUp Banner" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-API%2026%2B-3DDC84?style=flat&logo=android&logoColor=white" />
@@ -163,13 +163,13 @@ O relatório técnico detalhado do projeto está disponível em [RELATORIO_TECNI
 ## Capturas de Tela
 
 <p align="center">
-  <img src="Screenshot_20260530_175911.png" width="210" />
-  <img src="Screenshot_20260530_175945.png" width="210" />
-  <img src="Screenshot_20260530_175955.png" width="210" />
+  <img src="images/Screenshot_20260530_175911.png" width="210" />
+  <img src="images/Screenshot_20260530_175945.png" width="210" />
+  <img src="images/Screenshot_20260530_175955.png" width="210" />
 </p>
 <p align="center">
-  <img src="Screenshot_20260530_180001.png" width="210" />
-  <img src="Screenshot_20260530_180008.png" width="210" />
+  <img src="images/Screenshot_20260530_180001.png" width="210" />
+  <img src="images/Screenshot_20260530_180008.png" width="210" />
 </p>
 
 ## Autores
