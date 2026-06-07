@@ -1,6 +1,31 @@
-# CresUp 💹
+<p align="center">
+  <img src="CRESUPLOGO.png" width="130" alt="CresUp Logo" />
+</p>
 
-Plataforma moderna de evolução financeira pessoal gamificada para Android.
+<h1 align="center">CresUp 💹</h1>
+
+<p align="center">
+  Plataforma moderna de evolução financeira pessoal gamificada para Android.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Android-API%2026%2B-3DDC84?style=flat&logo=android&logoColor=white" />
+  <img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?style=flat&logo=kotlin&logoColor=white" />
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-2024.12-4285F4?style=flat&logo=jetpackcompose&logoColor=white" />
+  <img src="https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-FFCA28?style=flat&logo=firebase&logoColor=black" />
+</p>
+
+<br/>
+
+<p align="center">
+  <img src="Screenshot_20260530_175911.png" width="170" />
+  <img src="Screenshot_20260530_175945.png" width="170" />
+  <img src="Screenshot_20260530_175955.png" width="170" />
+  <img src="Screenshot_20260530_180001.png" width="170" />
+  <img src="Screenshot_20260530_180008.png" width="170" />
+</p>
+
+---
 
 ## Descrição
 
@@ -33,8 +58,8 @@ CresUp transforma o controle financeiro em uma experiência moderna, motivadora 
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/cresup.git
-cd cresup
+git clone https://github.com/felipeXZZ/CresUp-Financas-Gamificadas.git
+cd CresUp-Financas-Gamificadas
 
 # Abra no Android Studio e sincronize o Gradle
 # Execute no dispositivo ou emulador
@@ -143,7 +168,15 @@ O relatório técnico detalhado do projeto está disponível em [RELATORIO_TECNI
 
 ## Capturas de Tela
 
-_Execute o app e adicione capturas aqui_
+<p align="center">
+  <img src="Screenshot_20260530_175911.png" width="210" />
+  <img src="Screenshot_20260530_175945.png" width="210" />
+  <img src="Screenshot_20260530_175955.png" width="210" />
+</p>
+<p align="center">
+  <img src="Screenshot_20260530_180001.png" width="210" />
+  <img src="Screenshot_20260530_180008.png" width="210" />
+</p>
 
 ## Autor
 
