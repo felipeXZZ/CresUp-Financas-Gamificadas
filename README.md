@@ -207,13 +207,10 @@ O relatório técnico detalhado do projeto está disponível em [RELATORIO_TECNI
 ## Capturas de Tela
 
 <p align="center">
-  <img src="images/Screenshot_20260530_175911.png" width="210" />
-  <img src="images/Screenshot_20260530_175945.png" width="210" />
-  <img src="images/Screenshot_20260530_175955.png" width="210" />
-</p>
-<p align="center">
-  <img src="images/Screenshot_20260530_180001.png" width="210" />
-  <img src="images/Screenshot_20260530_180008.png" width="210" />
+  <img src="images/PRINT 1.png" width="210" />
+  <img src="images/PRINT 2.png" width="210" />
+  <img src="images/PRINT 3.png" width="210" />
+  <img src="images/PRINT 4.png" width="210" />
 </p>
 
 ## Autores
