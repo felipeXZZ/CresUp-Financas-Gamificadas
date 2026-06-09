@@ -4,7 +4,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,16 +18,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import com.cresup.app.R
 import com.cresup.app.domain.model.*
 import com.cresup.app.presentation.ui.components.*
+import com.cresup.app.presentation.ui.screens.analytics.categoryColor
 import com.cresup.app.presentation.ui.theme.*
 import com.cresup.app.presentation.viewmodel.DashboardViewModel
 import java.text.NumberFormat
@@ -36,6 +34,7 @@ import java.util.Locale
 
 @Composable
 fun DashboardScreen(
+    onNavigateToAnalytics: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,6 +59,14 @@ fun DashboardScreen(
                 savings = state.savings
             )
         }
+        if (state.categoryBreakdown.isNotEmpty()) {
+            item {
+                SpendingBreakdownCard(
+                    breakdown = state.categoryBreakdown,
+                    onViewAnalytics = onNavigateToAnalytics
+                )
+            }
+        }
         if (!state.quote.isNullOrBlank() && !state.isLoadingQuote) {
             item {
                 QuoteCard(quote = state.quote)
@@ -72,7 +79,26 @@ fun DashboardScreen(
         }
         if (state.recentTransactions.isNotEmpty()) {
             item {
-                SectionHeader(title = "Últimas Transações")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Últimas Transações",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Icon(
+                        Icons.Filled.Receipt,
+                        contentDescription = null,
+                        tint = NeonGreen,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
             items(state.recentTransactions) { tx ->
                 TransactionItem(transaction = tx)
@@ -92,8 +118,8 @@ private fun DashboardHeader(user: User, balance: Double) {
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(GreenDark.copy(alpha = 0.25f), Background),
-                    endY = 450f
+                    colors = listOf(GreenDark.copy(alpha = 0.20f), Background),
+                    endY = 480f
                 )
             )
             .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -101,36 +127,78 @@ private fun DashboardHeader(user: User, balance: Double) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(NeonGreen.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.Person,
+                            contentDescription = null,
+                            tint = NeonGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Olá, ${user.name}",
+                            fontSize = 13.sp,
+                            color = TextSecondary
+                        )
+                        Text(
+                            text = user.levelName,
+                            fontSize = 11.sp,
+                            color = NeonGreen,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
                 StreakBadge(streakDays = user.streakDays)
             }
-            Spacer(Modifier.height(16.dp))
+
+            Spacer(Modifier.height(24.dp))
+
             Text(
-                text = "Olá, ${user.name} ${user.avatarEmoji}",
-                fontSize = 14.sp,
-                color = TextSecondary
+                text = "Patrimônio Total",
+                fontSize = 13.sp,
+                color = TextSecondary,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.5.sp
             )
-            Text(
-                text = "Seu Saldo",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
-            )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = formatCurrency(balance),
-                fontSize = 36.sp,
+                fontSize = 38.sp,
                 fontWeight = FontWeight.Black,
                 color = if (balance >= 0) NeonGreen else AccentRed
             )
-            if (balance > 0) {
-                Text(
-                    text = "Você está no positivo! 🎉",
-                    fontSize = 12.sp,
-                    color = NeonGreen.copy(alpha = 0.8f)
-                )
+            if (balance >= 0) {
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.TrendingUp,
+                        contentDescription = null,
+                        tint = NeonGreen,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "Saldo positivo",
+                        fontSize = 12.sp,
+                        color = NeonGreen.copy(alpha = 0.8f)
+                    )
+                }
             }
         }
     }
@@ -149,22 +217,34 @@ private fun XPLevelCard(user: User) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                CircularLevelIndicator(progress = animatedProgress, level = user.level)
-            }
+            CircularLevelIndicator(progress = animatedProgress, level = user.level)
+
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = user.levelName,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = levelColor(user.level)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = user.levelName,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = levelColor(user.level)
+                    )
+                    Text(
+                        text = "Nível ${user.level}",
+                        fontSize = 11.sp,
+                        color = TextMuted,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = "${user.xp} / ${user.xpToNextLevel} XP",
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier
@@ -183,7 +263,7 @@ private fun XPLevelCard(user: User) {
 @Composable
 private fun CircularLevelIndicator(progress: Float, level: Int) {
     Box(
-        modifier = Modifier.size(56.dp),
+        modifier = Modifier.size(60.dp),
         contentAlignment = Alignment.Center
     ) {
         androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
@@ -192,19 +272,19 @@ private fun CircularLevelIndicator(progress: Float, level: Int) {
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
-                style = Stroke(width = 6f, cap = StrokeCap.Round)
+                style = Stroke(width = 7f, cap = StrokeCap.Round)
             )
             drawArc(
-                brush = Brush.sweepGradient(listOf(NeonGreen, NeonBlue, NeonGreen)),
+                brush = Brush.sweepGradient(listOf(NeonGreen, NeonGreenDim, NeonGreen)),
                 startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
-                style = Stroke(width = 6f, cap = StrokeCap.Round)
+                style = Stroke(width = 7f, cap = StrokeCap.Round)
             )
         }
         Text(
             text = "$level",
-            fontSize = 20.sp,
+            fontSize = 22.sp,
             fontWeight = FontWeight.Black,
             color = levelColor(level)
         )
@@ -223,21 +303,21 @@ private fun MonthSummaryRow(income: Double, expenses: Double, savings: Double) {
             label = "Receitas",
             value = formatCurrency(income),
             color = NeonGreen,
-            emoji = "📈",
+            icon = Icons.Filled.TrendingUp,
             modifier = Modifier.weight(1f)
         )
         SummaryChip(
             label = "Gastos",
             value = formatCurrency(expenses),
             color = AccentRed,
-            emoji = "📉",
+            icon = Icons.Filled.TrendingDown,
             modifier = Modifier.weight(1f)
         )
         SummaryChip(
             label = "Economia",
             value = formatCurrency(savings),
-            color = NeonCyan,
-            emoji = "💰",
+            color = NeonGreenDim,
+            icon = Icons.Filled.Savings,
             modifier = Modifier.weight(1f)
         )
     }
@@ -248,21 +328,113 @@ private fun SummaryChip(
     label: String,
     value: String,
     color: Color,
-    emoji: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(color.copy(alpha = 0.1f))
-            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .background(color.copy(alpha = 0.08f))
+            .border(1.dp, color.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(text = emoji, fontSize = 18.sp)
-        Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = color)
-        Text(text = label, fontSize = 10.sp, color = TextMuted)
+        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        Text(text = value, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
+        Text(text = label, fontSize = 9.sp, color = TextMuted)
+    }
+}
+
+@Composable
+private fun SpendingBreakdownCard(
+    breakdown: Map<String, Double>,
+    onViewAnalytics: () -> Unit
+) {
+    val total = breakdown.values.sum().takeIf { it > 0 } ?: return
+    val top4 = breakdown.entries.sortedByDescending { it.value }.take(4)
+
+    GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Gastos por Categoria",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                TextButton(
+                    onClick = onViewAnalytics,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                ) {
+                    Text(
+                        text = "Ver análise",
+                        fontSize = 12.sp,
+                        color = NeonGreen,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Icon(
+                        Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = NeonGreen,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            top4.forEach { (catLabel, amount) ->
+                val fraction = (amount / total).toFloat()
+                val animatedFraction by animateFloatAsState(
+                    targetValue = fraction,
+                    animationSpec = tween(700, easing = FastOutSlowInEasing),
+                    label = "cat_$catLabel"
+                )
+                val catKey = TransactionCategory.values()
+                    .firstOrNull { it.label == catLabel }?.name ?: "OTHER"
+                val color = categoryColor(catKey)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                    )
+                    Text(
+                        text = catLabel,
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.width(88.dp),
+                        maxLines = 1
+                    )
+                    LinearProgressIndicator(
+                        progress = { animatedFraction },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(5.dp)
+                            .clip(CircleShape),
+                        color = color,
+                        trackColor = CardBorder,
+                        strokeCap = StrokeCap.Round
+                    )
+                    Text(
+                        text = "${(fraction * 100).toInt()}%",
+                        fontSize = 11.sp,
+                        color = color,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(32.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -273,7 +445,12 @@ private fun QuoteCard(quote: String) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Text(text = "💡", fontSize = 20.sp)
+            Icon(
+                Icons.Filled.Lightbulb,
+                contentDescription = null,
+                tint = AccentYellow,
+                modifier = Modifier.size(20.dp)
+            )
             Text(
                 text = "\"$quote\"",
                 fontSize = 13.sp,
@@ -296,13 +473,27 @@ private fun ActiveGoalCard(goal: Goal) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(text = goal.emoji, fontSize = 22.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(NeonGreen.copy(0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.Flag,
+                            contentDescription = null,
+                            tint = NeonGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                     Column {
                         Text(
                             text = "Meta Ativa",
@@ -319,8 +510,8 @@ private fun ActiveGoalCard(goal: Goal) {
                 }
                 Text(
                     text = "${goal.progressPercent}%",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
                     color = NeonGreen
                 )
             }
@@ -344,17 +535,6 @@ private fun ActiveGoalCard(goal: Goal) {
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold,
-        color = TextPrimary,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-    )
-}
-
-@Composable
 private fun EmptyTransactionsCard() {
     GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Column(
@@ -362,7 +542,20 @@ private fun EmptyTransactionsCard() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = "💳", fontSize = 40.sp)
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(CardBorder),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.CreditCard,
+                    contentDescription = null,
+                    tint = TextMuted,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
             Text(
                 text = "Nenhuma transação ainda",
                 fontSize = 14.sp,
@@ -384,16 +577,21 @@ private fun StreakBadge(streakDays: Int) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(AccentOrange.copy(alpha = 0.15f))
-            .border(1.dp, AccentOrange.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+            .background(AccentOrange.copy(alpha = 0.12f))
+            .border(1.dp, AccentOrange.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Text(text = "🔥", fontSize = 14.sp)
+        Icon(
+            Icons.Filled.LocalFireDepartment,
+            contentDescription = null,
+            tint = AccentOrange,
+            modifier = Modifier.size(14.dp)
+        )
         Text(
-            text = "$streakDays",
-            fontSize = 14.sp,
+            text = "${streakDays}d",
+            fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = AccentOrange
         )

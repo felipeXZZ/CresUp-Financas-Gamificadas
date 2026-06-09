@@ -16,6 +16,7 @@ fun DocumentSnapshot.toUser(): User = User(
     maxStreak = getLong("maxStreak")?.toInt() ?: 0,
     totalSaved = getDouble("totalSaved") ?: 0.0,
     goalsCompleted = getLong("goalsCompleted")?.toInt() ?: 0,
+    coins = getLong("coins")?.toInt() ?: 0,
     lastActivityDate = getLong("lastActivityDate") ?: System.currentTimeMillis()
 )
 
@@ -30,6 +31,7 @@ fun User.toMap(): Map<String, Any?> = mapOf(
     "maxStreak" to maxStreak,
     "totalSaved" to totalSaved,
     "goalsCompleted" to goalsCompleted,
+    "coins" to coins,
     "lastActivityDate" to lastActivityDate
 )
 

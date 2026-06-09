@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.cresup.app.presentation.ui.screens.analytics.AnalyticsScreen
 import com.cresup.app.presentation.ui.screens.auth.LoginScreen
 import com.cresup.app.presentation.ui.screens.auth.RegisterScreen
 import com.cresup.app.presentation.ui.screens.dashboard.DashboardScreen
@@ -36,6 +37,7 @@ sealed class Screen(val route: String) {
     object Metas : Screen("metas")
     object Desafios : Screen("desafios")
     object Perfil : Screen("perfil")
+    object Analytics : Screen("analytics")
 }
 
 val bottomNavScreens = listOf(
@@ -127,10 +129,18 @@ fun NavGraph() {
                 )
             }
 
-            composable(Screen.Dashboard.route) { DashboardScreen() }
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(
+                    onNavigateToAnalytics = {
+                        navController.navigate(Screen.Analytics.route)
+                    }
+                )
+            }
+
             composable(Screen.Gastos.route) { GastosScreen() }
             composable(Screen.Metas.route) { MetasScreen() }
             composable(Screen.Desafios.route) { DesafiosScreen() }
+
             composable(Screen.Perfil.route) {
                 PerfilScreen(
                     onLogout = {
@@ -139,6 +149,12 @@ fun NavGraph() {
                             popUpTo(0) { inclusive = true }
                         }
                     }
+                )
+            }
+
+            composable(Screen.Analytics.route) {
+                AnalyticsScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

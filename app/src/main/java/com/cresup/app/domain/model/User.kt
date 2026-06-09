@@ -12,6 +12,7 @@ data class User(
     val maxStreak: Int = 0,
     val totalSaved: Double = 0.0,
     val goalsCompleted: Int = 0,
+    val coins: Int = 0,
     val lastActivityDate: Long = System.currentTimeMillis()
 )
 

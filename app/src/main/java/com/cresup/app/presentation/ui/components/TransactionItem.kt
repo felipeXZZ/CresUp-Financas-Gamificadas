@@ -4,15 +4,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cresup.app.domain.model.Transaction
+import com.cresup.app.domain.model.TransactionCategory
 import com.cresup.app.domain.model.TransactionType
 import com.cresup.app.presentation.ui.screens.dashboard.formatCurrency
 import com.cresup.app.presentation.ui.theme.*
@@ -29,7 +34,7 @@ fun TransactionItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 5.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(CardBackground)
             .padding(12.dp),
@@ -43,7 +48,12 @@ fun TransactionItem(
                 .background(transaction.category.color.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = transaction.category.emoji, fontSize = 20.sp)
+            Icon(
+                imageVector = categoryIcon(transaction.category),
+                contentDescription = transaction.category.label,
+                tint = transaction.category.color,
+                modifier = Modifier.size(20.dp)
+            )
         }
 
         Column(modifier = Modifier.weight(1f)) {
@@ -67,6 +77,20 @@ fun TransactionItem(
             color = if (isIncome) NeonGreen else AccentRed
         )
     }
+}
+
+fun categoryIcon(category: TransactionCategory): ImageVector = when (category) {
+    TransactionCategory.FOOD        -> Icons.Filled.Restaurant
+    TransactionCategory.DELIVERY    -> Icons.Filled.DeliveryDining
+    TransactionCategory.TRANSPORT   -> Icons.Filled.DirectionsCar
+    TransactionCategory.STUDIES     -> Icons.Filled.School
+    TransactionCategory.GYM         -> Icons.Filled.FitnessCenter
+    TransactionCategory.LEISURE     -> Icons.Filled.SportsEsports
+    TransactionCategory.STREAMING   -> Icons.Filled.PlayCircle
+    TransactionCategory.INVESTMENTS -> Icons.Filled.TrendingUp
+    TransactionCategory.SHOPPING    -> Icons.Filled.ShoppingCart
+    TransactionCategory.SALARY      -> Icons.Filled.AttachMoney
+    TransactionCategory.OTHER       -> Icons.Filled.MoreHoriz
 }
 
 private fun formatDate(timestamp: Long): String {
