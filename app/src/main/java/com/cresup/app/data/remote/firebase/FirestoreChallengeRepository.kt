@@ -45,7 +45,7 @@ class FirestoreChallengeRepository @Inject constructor(
         ).await()
     }
 
-    override suspend fun incrementProgress(id: Long) {
+    override suspend fun incrementProgress(id: Long): Boolean {
         val snap = col.document(id.toString()).get().await()
         val challenge = snap.toChallenge()
         val newProgress = (challenge.progressCurrent + 1).coerceAtMost(challenge.durationDays)
@@ -57,6 +57,7 @@ class FirestoreChallengeRepository @Inject constructor(
                 "isActive" to !isCompleted
             )
         ).await()
+        return isCompleted
     }
 
     override suspend fun seedDefaultChallenges() {
