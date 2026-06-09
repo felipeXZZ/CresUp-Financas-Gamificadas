@@ -109,7 +109,7 @@ A stack Retrofit + OkHttp está completamente implementada para integração fut
 
 1. `QuoteApi` — interface Retrofit com `@GET("random")` e retorno `suspend fun getRandomQuote(): List<QuoteDto>`
 2. `QuoteDto` — data class com `@SerializedName` para mapeamento JSON → Kotlin
-3. `QuoteRepositoryImpl` — serve sempre uma das 12 frases curadas em português, garantindo disponibilidade offline e idioma consistente; a chamada à API externa está desabilitada pois o serviço retorna frases somente em inglês
+3. `QuoteRepositoryImpl` — realiza a requisição assíncrona à API em `try-catch`; independentemente do resultado (a API retorna frases em inglês), exibe sempre uma das 12 frases curadas em português para manter a consistência de idioma do app
 4. `AppModule` — provê `OkHttpClient` (com `HttpLoggingInterceptor`), `Retrofit` (baseUrl ZenQuotes) e `QuoteApi`
 
 ### 4.2 Firebase Authentication

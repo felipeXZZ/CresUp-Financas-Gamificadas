@@ -173,9 +173,9 @@ app/src/main/java/com/cresup/app/
 | Conquistador | Lendário | Todos os desafios concluídos |
 | Maratonista | Lendário | 100 dias de streak |
 
-## Frases Motivacionais
+## API Utilizada
 
-O app exibe 12 frases motivacionais curadas em português na tela inicial. A stack Retrofit + OkHttp e a integração com a ZenQuotes API estão implementadas no código para futura expansão, mas as frases são servidas localmente para garantir disponibilidade offline e idioma consistente.
+**ZenQuotes API** — `GET https://zenquotes.io/api/random`, consumida via Retrofit + OkHttp com tratamento de erros via `try-catch`. O app realiza a requisição assíncrona a cada abertura da tela; independentemente do retorno (a API responde em inglês), exibe sempre uma das 12 frases motivacionais curadas em português para manter consistência de idioma. Em caso de falha de rede a frase local é exibida diretamente.
 
 ## Tratamento de Erros
 
