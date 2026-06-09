@@ -8,6 +8,6 @@ interface ChallengeRepository {
     suspend fun insert(challenge: Challenge)
     suspend fun update(challenge: Challenge)
     suspend fun activateChallenge(id: Long)
-    suspend fun incrementProgress(id: Long)
+    suspend fun incrementProgress(id: Long): Boolean
     suspend fun seedDefaultChallenges()
 }

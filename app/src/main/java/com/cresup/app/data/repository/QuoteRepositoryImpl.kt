@@ -23,11 +23,6 @@ class QuoteRepositoryImpl @Inject constructor(
         "Finanças saudáveis começam com escolhas conscientes."
     )
 
-    override suspend fun getMotivationalQuote(): Result<String> = try {
-        val quote = api.getRandomQuote().firstOrNull()?.quote
-        if (quote.isNullOrBlank()) Result.success(fallback.random())
-        else Result.success(quote)
-    } catch (e: Exception) {
+    override suspend fun getMotivationalQuote(): Result<String> =
         Result.success(fallback.random())
-    }
 }

@@ -25,6 +25,8 @@ class DesafiosViewModel @Inject constructor(
     private val _state = MutableStateFlow(DesafiosState())
     val state: StateFlow<DesafiosState> = _state.asStateFlow()
 
+    private val processingIds = mutableSetOf<Long>()
+
     init {
         viewModelScope.launch {
             challengeRepository.seedDefaultChallenges()
@@ -38,18 +40,22 @@ class DesafiosViewModel @Inject constructor(
         if (challenge.isActive || challenge.isCompleted) return
         viewModelScope.launch {
             challengeRepository.activateChallenge(challenge.id)
-            _state.update { it.copy(successMessage = "Desafio ativado! Bora lá! 💪") }
+            _state.update { it.copy(successMessage = "Desafio ativado! Bora lá!") }
         }
     }
 
     fun progressChallenge(challenge: Challenge) {
         if (!challenge.isActive || challenge.isCompleted) return
+        if (!processingIds.add(challenge.id)) return  // já em processamento, bloqueia double-tap
         viewModelScope.launch {
-            challengeRepository.incrementProgress(challenge.id)
-            val updated = _state.value.challenges.find { it.id == challenge.id }
-            if (updated?.progressCurrent == updated?.durationDays?.minus(1)) {
-                userRepository.addXP(challenge.xpReward)
-                _state.update { it.copy(successMessage = "Desafio concluído! +${challenge.xpReward} XP 🏆") }
+            try {
+                val completed = challengeRepository.incrementProgress(challenge.id)
+                if (completed) {
+                    userRepository.addXP(challenge.xpReward)
+                    _state.update { it.copy(successMessage = "Desafio concluído! +${challenge.xpReward} XP") }
+                }
+            } finally {
+                processingIds.remove(challenge.id)
             }
         }
     }

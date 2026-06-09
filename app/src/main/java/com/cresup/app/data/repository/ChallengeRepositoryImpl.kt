@@ -29,11 +29,14 @@ class ChallengeRepositoryImpl @Inject constructor(
         dao.activate(id, System.currentTimeMillis())
     }
 
-    override suspend fun incrementProgress(id: Long) {
+    override suspend fun incrementProgress(id: Long): Boolean {
         dao.incrementProgress(id)
-        val ch = dao.getById(id) ?: return
-        if (ch.progressCurrent + 1 >= ch.durationDays) {
+        val ch = dao.getById(id) ?: return false
+        return if (ch.progressCurrent >= ch.durationDays) {
             dao.markCompleted(id)
+            true
+        } else {
+            false
         }
     }
 
