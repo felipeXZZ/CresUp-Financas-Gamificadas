@@ -103,14 +103,13 @@ O Room atende ao requisito acadêmico de persistência local. O Firestore foi ad
 
 ## 4. Integração com APIs Externas
 
-### 4.1 ZenQuotes API (Retrofit + OkHttp)
+### 4.1 Frases Motivacionais (Retrofit + OkHttp)
 
-Endpoint consumido: `GET https://zenquotes.io/api/random`
+A stack Retrofit + OkHttp está completamente implementada para integração futura com a ZenQuotes API (`GET https://zenquotes.io/api/random`):
 
-Caminho da implementação:
 1. `QuoteApi` — interface Retrofit com `@GET("random")` e retorno `suspend fun getRandomQuote(): List<QuoteDto>`
 2. `QuoteDto` — data class com `@SerializedName` para mapeamento JSON → Kotlin
-3. `QuoteRepositoryImpl` — chama a API em `try-catch`; em caso de falha retorna uma das 12 frases locais em português
+3. `QuoteRepositoryImpl` — serve sempre uma das 12 frases curadas em português, garantindo disponibilidade offline e idioma consistente; a chamada à API externa está desabilitada pois o serviço retorna frases somente em inglês
 4. `AppModule` — provê `OkHttpClient` (com `HttpLoggingInterceptor`), `Retrofit` (baseUrl ZenQuotes) e `QuoteApi`
 
 ### 4.2 Firebase Authentication
@@ -297,8 +296,9 @@ Tela exclusiva que processa e exibe dados financeiros avançados sem dependênci
 - `try-catch` em todos os métodos que acessam repositórios
 - Erros Firebase mapeados para português via `mapFirebaseError()`
 - Snackbars para feedback imediato em todas as telas
-- Fallback local para a API de frases quando sem conexão
+- Frases motivacionais sempre disponíveis offline (12 frases curadas em português)
 - Campos Firestore ausentes em documentos existentes recebem valores padrão (backward-compatible)
+- Guarda de processamento em operações de desafio (`processingIds: MutableSet<Long>`) evita race conditions por double-tap
 
 ---
 
@@ -338,3 +338,6 @@ Solução: `AnalyticsViewModel.buildInsights()` computa regras determinísticas 
 
 **Backward-compatibility ao adicionar campos ao Firestore**  
 Solução: todos os novos campos (`coins`, `difficulty`) usam `?: 0` / `?: MEDIUM` como fallback nos mappers, garantindo que documentos antigos funcionem sem migração.
+
+**Integridade de XP nos desafios — off-by-one + race condition**  
+Três bugs interagiam para permitir acúmulo indevido de XP: (1) off-by-one em `incrementProgress` — após `dao.incrementProgress(id)` o valor já estava incrementado, mas o código somava `+1` novamente na comparação, concluindo o desafio um dia antes do prazo; (2) leitura de estado stale — o ViewModel lia `_state.value` imediatamente após o suspend do repositório, antes do Flow emitir o novo dado, fazendo vários taps simultâneos lerem o mesmo `progressCurrent` e cada um conceder XP; (3) guarda insuficiente contra double-tap — a verificação `challenge.isCompleted` usava o objeto recebido do Composable (stale), permitindo múltiplos coroutines concorrentes no mesmo desafio. Solução: `incrementProgress` passa a retornar `Boolean` indicando conclusão; o XP é concedido com base nesse retorno direto (sem leitura de estado stale); e `processingIds: MutableSet<Long>` no ViewModel bloqueia chamadas concorrentes para o mesmo desafio via `MutableSet.add` atômico antes do `launch`.

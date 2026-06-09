@@ -173,18 +173,19 @@ app/src/main/java/com/cresup/app/
 | Conquistador | Lendário | Todos os desafios concluídos |
 | Maratonista | Lendário | 100 dias de streak |
 
-## API Utilizada
+## Frases Motivacionais
 
-**ZenQuotes API** — frases motivacionais aleatórias (`GET https://zenquotes.io/api/random`), consumida via Retrofit + OkHttp. Em caso de falha de rede o app exibe automaticamente uma das 12 frases motivacionais em português armazenadas localmente.
+O app exibe 12 frases motivacionais curadas em português na tela inicial. A stack Retrofit + OkHttp e a integração com a ZenQuotes API estão implementadas no código para futura expansão, mas as frases são servidas localmente para garantir disponibilidade offline e idioma consistente.
 
 ## Tratamento de Erros
 
 - Validação nos ViewModels antes de qualquer operação de I/O
-- Fallback local em português para API de frases
+- Frases motivacionais sempre disponíveis (armazenadas localmente em português)
 - `try-catch` em todos os repositórios
 - Snackbars para feedback de sucesso e erro
 - Estados de vazio com ilustrações em todas as telas
 - Erros Firebase mapeados para mensagens em português
+- Guarda de processamento nos desafios (`processingIds`) para evitar double-tap e race conditions
 
 ## Distribuição
 
