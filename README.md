@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?style=flat&logo=kotlin&logoColor=white" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-2024.12-4285F4?style=flat&logo=jetpackcompose&logoColor=white" />
   <img src="https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-FFCA28?style=flat&logo=firebase&logoColor=black" />
+  <img src="https://img.shields.io/badge/Google%20Play-Teste%20Fechado-34A853?style=flat&logo=googleplay&logoColor=white" />
 </p>
 
 ---
@@ -23,7 +24,7 @@
 
 ## Descrição
 
-CresUp transforma o controle financeiro em uma experiência moderna, motivadora e visualmente premium. Inspirado em Duolingo, Revolut e Monzo, o app é direcionado à Geração Z e jovens adultos que querem evoluir financeiramente de forma engajante.
+CresUp é uma plataforma de evolução financeira pessoal gamificada com aparência premium de 2026. Inspirado em Nubank, Revolut, Duolingo e Habitica, transforma o controle financeiro em uma experiência motivadora para a Geração Z: registre transações, crie metas, aceite desafios e evolua com XP, níveis, conquistas e streaks.
 
 ## Tecnologias
 
@@ -31,14 +32,14 @@ CresUp transforma o controle financeiro em uma experiência moderna, motivadora 
 |---|---|---|
 | Kotlin | 2.1.0 | Linguagem principal |
 | Jetpack Compose | BOM 2024.12 | Interface declarativa |
-| Material Design 3 | — | Sistema de design |
-| MVVM + Clean Architecture | — | Arquitetura |
+| Material Design 3 | — | Sistema de design + Material Icons |
+| MVVM + Clean Architecture | — | Arquitetura em 3 camadas |
 | Hilt | 2.51.1 | Injeção de dependência |
 | Room | 2.6.1 | Persistência local (SQLite) |
-| Firebase Firestore | BOM 33.10 | Banco de dados em nuvem |
-| Firebase Auth | BOM 33.10 | Autenticação |
+| Firebase Firestore | BOM 33.10 | Banco de dados em nuvem (tempo real) |
+| Firebase Auth | BOM 33.10 | Autenticação e-mail + Google |
 | Retrofit + OkHttp | 2.11 / 4.12 | Consumo de API REST |
-| Coroutines + StateFlow | 1.9.0 | Assincronismo |
+| Coroutines + StateFlow | 1.9.0 | Assincronismo reativo |
 | Navigation Compose | 2.8.5 | Navegação entre telas |
 | Coil | 2.7.0 | Carregamento de imagens |
 
@@ -65,57 +66,73 @@ cd CresUp-Financas-Gamificadas
 app/src/main/java/com/cresup/app/
 ├── data/
 │   ├── local/          # Room: entities, DAOs, AppDatabase
-│   ├── remote/         # Retrofit: API, DTOs
+│   ├── remote/         # Retrofit: QuoteApi, DTOs; Firebase: repositórios Firestore
 │   └── repository/     # Implementações dos repositórios
-├── di/                 # Módulos Hilt
+├── di/                 # AppModule (Hilt)
 ├── domain/
-│   ├── model/          # Modelos de domínio
+│   ├── model/          # User, Transaction, Goal, Challenge, Achievement
 │   └── repository/     # Interfaces dos repositórios
 └── presentation/
     ├── ui/
-    │   ├── components/  # Componentes reutilizáveis
-    │   ├── navigation/  # NavGraph + BottomNav
-    │   ├── screens/     # Telas do app
-    │   └── theme/       # Cores, tipografia, tema
-    └── viewmodel/       # ViewModels por tela
+    │   ├── components/  # GlassCard, TransactionItem, CurrencyVisualTransformation
+    │   ├── navigation/  # NavGraph, CresUpBottomNav
+    │   ├── screens/     # dashboard, gastos, metas, desafios, perfil, analytics, auth, onboarding, splash
+    │   └── theme/       # Color, Type, Theme
+    └── viewmodel/       # AuthVM, DashboardVM, GastosVM, MetasVM, DesafiosVM, PerfilVM, AnalyticsVM
 ```
 
 ## Funcionalidades
 
 ### Dashboard
-- Saldo total em tempo real
-- Resumo mensal (receitas, despesas, economia)
-- Progresso de XP e nível do usuário
-- Streak de dias ativos
+- Patrimônio total em tempo real (saldo acumulado)
+- Resumo mensal: receitas, despesas, economia — com ícones Material
+- Gráfico inline de gastos por categoria (top 4) com barras animadas
+- Botão **"Ver análise"** → tela de Análises
+- Progresso de XP e nível com indicador circular animado
+- Streak badge (LocalFireDepartment icon)
 - Meta ativa com barra de progresso
-- Frase motivacional via API (ZenQuotes, com fallback local)
-- Últimas transações
+- Frase motivacional via ZenQuotes API (fallback local)
+- Últimas 5 transações com ícones por categoria
 
 ### Gastos
-- Adicionar receitas e despesas com categorias
-- Busca e filtro por tipo
-- Swipe para deletar
-- 11 categorias: Alimentação, Delivery, Transporte, Estudos, Academia, Lazer, Streaming, Investimentos, Compras, Salário, Outros
+- Adicionar receitas e despesas com 11 categorias
+- Cada categoria com ícone Material exclusivo (sem emojis)
+- Busca e filtro por tipo (Todos / Receitas / Despesas)
+- Swipe-to-delete com confirmação visual
 - Feedback de XP ao registrar transações
 
 ### Metas
 - Criar metas com presets (Viagem, iPhone, Setup Gamer, etc.)
 - Contribuir para metas com qualquer valor
-- Barra de progresso animada
+- Barra de progresso animada + percentual
 - Detecção automática de meta concluída
 
 ### Desafios
-- 5 desafios pré-definidos
-- Sistema de ativação e registro de progresso diário
-- Recompensa de XP ao concluir
-- Visual de status: pendente / ativo / concluído
+- 5 desafios com **nível de dificuldade**: Fácil / Médio / Difícil
+- Badge de dificuldade colorido (verde / amarelo / vermelho)
+- Ícones exclusivos por desafio (sem emojis)
+- Progresso geral no cabeçalho
+- Recompensa de XP variável ao concluir
+
+### Análises *(tela exclusiva)*
+- Cards de métricas: receita, gastos, taxa de economia, média diária
+- Gráfico de barras horizontais animado por categoria de gasto
+- Trend mensal: variação % de gastos vs mês anterior
+- **Insights financeiros automáticos** (rule-based):
+  - Alerta se gastos superam receita
+  - Parabéns se taxa de economia ≥ 30%
+  - Destaque da categoria que domina os gastos
+  - Tendência de alta/queda vs mês anterior
+  - Reconhecimento de streak e nível
 
 ### Perfil
-- Avatar com emoji
+- Avatar com ícone (Material Icon) + borda colorida por nível
 - Nome editável
-- Nível e XP com barra circular
-- Estatísticas: streak atual, recorde, metas concluídas
-- Sistema de conquistas (badges)
+- **Coins badge** (moeda virtual da gamificação)
+- Nível e XP com barra de progresso linear
+- Estatísticas: streak atual, recorde, metas concluídas (ícones coloridos)
+- **15 conquistas** com sistema de raridade (Comum / Raro / Épico / Lendário)
+- Cada conquista tem ícone Material + cor de raridade
 
 ## Gamificação
 
@@ -132,20 +149,42 @@ app/src/main/java/com/cresup/app/
 | Nível | Nome | XP necessário |
 |---|---|---|
 | 1 | Poupador Iniciante | 0 – 499 |
-| 2 | Construtor de Riqueza | 500 – 1499 |
-| 3 | Especialista Financeiro | 1500 – 3499 |
-| 4 | Elite Financeira | 3500+ |
+| 2 | Construtor de Riqueza | 500 – 1.499 |
+| 3 | Especialista Financeiro | 1.500 – 3.499 |
+| 4 | Elite Financeira | 3.500+ |
+
+### Conquistas
+
+| Conquista | Raridade | Condição |
+|---|---|---|
+| Primeiro Passo | Comum | Primeira transação |
+| Economizador | Comum | Primeira economia |
+| Streak de Fogo | Raro | 7 dias de streak |
+| Meta Alcançada | Raro | Primeira meta concluída |
+| Disciplinado | Épico | 30 dias de streak |
+| Investidor | Raro | Primeiro investimento |
+| Desafiador | Comum | Primeiro desafio concluído |
+| Elite Financeiro | Lendário | Nível 4 atingido |
+| Sem Delivery | Raro | 7 dias sem delivery |
+| Milionário do XP | Épico | 5.000 XP acumulados |
+| Construtor | Raro | 5 metas criadas |
+| Centurião | Épico | 100 transações registradas |
+| Poupador de Elite | Épico | R$1.000 economizados |
+| Conquistador | Lendário | Todos os desafios concluídos |
+| Maratonista | Lendário | 100 dias de streak |
 
 ## API Utilizada
 
-**ZenQuotes API** — frases motivacionais aleatórias (`GET https://zenquotes.io/api/random`), consumida via Retrofit + OkHttp. Em caso de falha de rede, o app exibe automaticamente uma das 12 frases motivacionais em português armazenadas localmente.
+**ZenQuotes API** — frases motivacionais aleatórias (`GET https://zenquotes.io/api/random`), consumida via Retrofit + OkHttp. Em caso de falha de rede o app exibe automaticamente uma das 12 frases motivacionais em português armazenadas localmente.
 
 ## Tratamento de Erros
 
-- Validação em todos os formulários com mensagens claras
-- Fallback local em português para API de frases motivacionais
+- Validação nos ViewModels antes de qualquer operação de I/O
+- Fallback local em português para API de frases
+- `try-catch` em todos os repositórios
 - Snackbars para feedback de sucesso e erro
-- Estados de vazio com ilustrações
+- Estados de vazio com ilustrações em todas as telas
+- Erros Firebase mapeados para mensagens em português
 
 ## Distribuição
 
