@@ -19,6 +19,7 @@ class FirestoreUserRepository @Inject constructor(
 
     private val uid get() = auth.currentUser?.uid.orEmpty()
     private val userDoc get() = firestore.collection("users").document(uid)
+    private val profilesCol get() = firestore.collection("publicProfiles")
 
     override fun getUser(): Flow<User> = callbackFlow {
         val reg = userDoc.addSnapshotListener { snap, err ->
@@ -51,6 +52,16 @@ class FirestoreUserRepository @Inject constructor(
                 "xpToNextLevel" to xpToNextLevel(level)
             )
         ).await()
+        profilesCol.document(uid).set(
+            mapOf(
+                "uid" to uid,
+                "name" to current.name,
+                "userCode" to current.userCode,
+                "level" to level,
+                "levelName" to levelName,
+                "xp" to newXp
+            )
+        ).await()
     }
 
     override suspend fun updateStreak() { }
@@ -60,7 +71,25 @@ class FirestoreUserRepository @Inject constructor(
         if (!snap.exists()) {
             val email = auth.currentUser?.email ?: ""
             val name = email.substringBefore("@").replaceFirstChar { it.uppercase() }
-            userDoc.set(User(name = name).toMap()).await()
+            val code = generateUserCode()
+            val user = User(name = name, userCode = code)
+            userDoc.set(user.toMap()).await()
+            profilesCol.document(uid).set(
+                mapOf(
+                    "uid" to uid,
+                    "name" to name,
+                    "userCode" to code,
+                    "level" to 1,
+                    "levelName" to "Poupador Iniciante",
+                    "xp" to 0
+                )
+            ).await()
         }
+    }
+
+    private fun generateUserCode(): String {
+        val chars = uid.filter { it.isLetterOrDigit() }.uppercase()
+        val part = (chars.take(2) + chars.takeLast(2)).take(4).padEnd(4, '0')
+        return "CRES-$part"
     }
 }

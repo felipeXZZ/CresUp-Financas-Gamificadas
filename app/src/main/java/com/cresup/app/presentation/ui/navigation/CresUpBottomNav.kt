@@ -38,6 +38,7 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Gastos, "Gastos", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
     BottomNavItem(Screen.Metas, "Metas", Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
     BottomNavItem(Screen.Desafios, "Desafios", Icons.Filled.Bolt, Icons.Outlined.Bolt),
+    BottomNavItem(Screen.Social, "Social", Icons.Filled.Group, Icons.Outlined.Group),
     BottomNavItem(Screen.Perfil, "Perfil", Icons.Filled.Person, Icons.Outlined.Person)
 )
 
@@ -92,7 +93,7 @@ private fun BottomNavTab(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {

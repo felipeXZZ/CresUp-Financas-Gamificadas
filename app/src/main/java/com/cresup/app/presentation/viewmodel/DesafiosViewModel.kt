@@ -3,12 +3,17 @@ package com.cresup.app.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cresup.app.domain.model.Challenge
+import com.cresup.app.domain.model.FeedItem
+import com.cresup.app.domain.model.FeedItemType
 import com.cresup.app.domain.repository.ChallengeRepository
+import com.cresup.app.domain.repository.SocialRepository
 import com.cresup.app.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+
 
 data class DesafiosState(
     val challenges: List<Challenge> = emptyList(),
@@ -19,7 +24,8 @@ data class DesafiosState(
 @HiltViewModel
 class DesafiosViewModel @Inject constructor(
     private val challengeRepository: ChallengeRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val socialRepository: SocialRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DesafiosState())
@@ -52,6 +58,17 @@ class DesafiosViewModel @Inject constructor(
                 val completed = challengeRepository.incrementProgress(challenge.id)
                 if (completed) {
                     userRepository.addXP(challenge.xpReward)
+                    val userName = userRepository.getUser().first().name
+                    runCatching {
+                        socialRepository.postToMyFeed(
+                            FeedItem(
+                                type = FeedItemType.CHALLENGE,
+                                actorName = userName,
+                                message = "concluiu o desafio \"${challenge.title}\"! +${challenge.xpReward} XP",
+                                timestamp = System.currentTimeMillis()
+                            )
+                        )
+                    }
                     _state.update { it.copy(successMessage = "Desafio concluído! +${challenge.xpReward} XP") }
                 }
             } finally {

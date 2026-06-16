@@ -17,6 +17,7 @@ fun DocumentSnapshot.toUser(): User = User(
     totalSaved = getDouble("totalSaved") ?: 0.0,
     goalsCompleted = getLong("goalsCompleted")?.toInt() ?: 0,
     coins = getLong("coins")?.toInt() ?: 0,
+    userCode = getString("userCode") ?: "",
     lastActivityDate = getLong("lastActivityDate") ?: System.currentTimeMillis()
 )
 
@@ -32,6 +33,7 @@ fun User.toMap(): Map<String, Any?> = mapOf(
     "totalSaved" to totalSaved,
     "goalsCompleted" to goalsCompleted,
     "coins" to coins,
+    "userCode" to userCode,
     "lastActivityDate" to lastActivityDate
 )
 

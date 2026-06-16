@@ -9,6 +9,7 @@ import com.cresup.app.data.local.dao.TransactionDao
 import com.cresup.app.data.local.dao.UserDao
 import com.cresup.app.data.remote.firebase.FirestoreChallengeRepository
 import com.cresup.app.data.remote.firebase.FirestoreGoalRepository
+import com.cresup.app.data.remote.firebase.FirestoreSocialRepository
 import com.cresup.app.data.remote.firebase.FirestoreTransactionRepository
 import com.cresup.app.data.remote.firebase.FirestoreUserRepository
 import com.cresup.app.data.remote.api.QuoteApi
@@ -16,6 +17,7 @@ import com.cresup.app.data.repository.QuoteRepositoryImpl
 import com.cresup.app.domain.repository.ChallengeRepository
 import com.cresup.app.domain.repository.GoalRepository
 import com.cresup.app.domain.repository.QuoteRepository
+import com.cresup.app.domain.repository.SocialRepository
 import com.cresup.app.domain.repository.TransactionRepository
 import com.cresup.app.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -100,4 +102,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideQuoteRepository(impl: QuoteRepositoryImpl): QuoteRepository = impl
+
+    @Provides
+    @Singleton
+    fun provideSocialRepository(impl: FirestoreSocialRepository): SocialRepository = impl
 }
