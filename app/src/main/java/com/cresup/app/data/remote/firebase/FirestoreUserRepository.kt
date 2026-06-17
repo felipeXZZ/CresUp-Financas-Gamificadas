@@ -76,18 +76,31 @@ class FirestoreUserRepository @Inject constructor(
             val code = generateUserCode()
             val user = User(name = name, userCode = code)
             userDoc.set(user.toMap()).await()
-            runCatching {
-                profilesCol.document(uid).set(
-                    mapOf(
-                        "uid" to uid,
-                        "name" to name,
-                        "userCode" to code,
-                        "level" to 1,
-                        "levelName" to "Poupador Iniciante",
-                        "xp" to 0
-                    )
-                ).await()
+            syncPublicProfile(name, code, 1, "Poupador Iniciante", 0)
+        } else {
+            val user = snap.toUser()
+            if (user.userCode.isEmpty()) {
+                val code = generateUserCode()
+                userDoc.update("userCode", code).await()
+                syncPublicProfile(user.name, code, user.level, user.levelName, user.xp)
+            } else {
+                syncPublicProfile(user.name, user.userCode, user.level, user.levelName, user.xp)
             }
+        }
+    }
+
+    private suspend fun syncPublicProfile(name: String, code: String, level: Int, levelName: String, xp: Int) {
+        runCatching {
+            profilesCol.document(uid).set(
+                mapOf(
+                    "uid" to uid,
+                    "name" to name,
+                    "userCode" to code,
+                    "level" to level,
+                    "levelName" to levelName,
+                    "xp" to xp
+                )
+            ).await()
         }
     }
 
