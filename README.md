@@ -52,12 +52,76 @@ CresUp é uma plataforma de evolução financeira pessoal gamificada com aparên
 ## Instalação
 
 ```bash
-# Clone o repositório
+# 1. Clone o repositório
 git clone https://github.com/felipeXZZ/CresUp-Financas-Gamificadas.git
 cd CresUp-Financas-Gamificadas
 
-# Abra no Android Studio e sincronize o Gradle
-# Execute no dispositivo ou emulador
+# 2. Abra o projeto no Android Studio (Ladybug 2024.2.1+)
+#    O Gradle sincroniza automaticamente na primeira abertura
+
+# 3. Conecte um dispositivo Android (USB/Wi-Fi) ou inicie um emulador (API 26+)
+
+# 4. Execute o app
+./gradlew installDebug
+# Ou clique em Run ▶ no Android Studio
+```
+
+### Configuração do Firebase
+
+O projeto já inclui o `google-services.json` configurado. Para usar seu próprio projeto Firebase:
+
+1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
+2. Ative **Authentication** (e-mail/senha + Google Sign-In)
+3. Ative **Cloud Firestore** e publique as regras de segurança (veja seção abaixo)
+4. Baixe o `google-services.json` e substitua em `app/google-services.json`
+
+### Regras do Firestore
+
+Publique as seguintes regras no Firebase Console → Firestore → Regras:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      match /transactions/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /goals/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /challenges/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /feed/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /friends/{friendId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null
+          && (request.auth.uid == userId || request.auth.uid == friendId);
+      }
+    }
+    match /publicProfiles/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /friendRequests/{requestId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.fromUid == request.auth.uid;
+      allow update, delete: if request.auth != null;
+    }
+  }
+}
+```
+
+### Build de Release
+
+```bash
+# Requer keystore.properties na raiz (não incluso no repo)
+./gradlew bundleRelease
 ```
 
 ## Estrutura do Projeto
