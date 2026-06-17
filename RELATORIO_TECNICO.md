@@ -27,6 +27,7 @@ Funcionalidades principais:
 - Sistema de desafios com dificuldade (Fácil / Médio / Difícil) e progresso diário
 - Gamificação: XP, 4 níveis, streaks, 15 conquistas com raridade, moeda virtual (Coins)
 - Tela de Análises exclusiva: gráficos de categoria, métricas e insights financeiros automáticos
+- Sistema social: pedidos de amizade (enviar/aceitar/recusar), ranking entre amigos, feed de atividades
 - Frase motivacional diária via API externa com fallback local em português
 - Autenticação com e-mail/senha e Google Sign-In
 
@@ -40,20 +41,20 @@ O projeto adota Clean Architecture dividida em três camadas independentes:
 
 **Camada Domain** (`domain/`)  
 Núcleo da aplicação, sem dependência de frameworks Android:
-- Modelos de domínio: `User`, `Transaction`, `Goal`, `Challenge`, `Achievement`
-- Enums: `TransactionType`, `TransactionCategory`, `ChallengeDifficulty`, `AchievementRarity`
-- Interfaces de repositório: `UserRepository`, `TransactionRepository`, `GoalRepository`, `ChallengeRepository`, `QuoteRepository`
+- Modelos de domínio: `User`, `Transaction`, `Goal`, `Challenge`, `Achievement`, `PublicProfile`, `FriendRequest`, `FeedItem`
+- Enums: `TransactionType`, `TransactionCategory`, `ChallengeDifficulty`, `AchievementRarity`, `FeedItemType`
+- Interfaces de repositório: `UserRepository`, `TransactionRepository`, `GoalRepository`, `ChallengeRepository`, `QuoteRepository`, `SocialRepository`
 - Regras de negócio: `computeLevel(xp)`, `levelProgress()`, detecção de conquistas
 
 **Camada Data** (`data/`)  
 Implementações concretas dos repositórios:
 - Room: `AppDatabase`, 4 entities, 4 DAOs (persistência local SQLite)
-- Firestore: 4 repositórios com sincronização em tempo real e cache offline
+- Firestore: 5 repositórios com sincronização em tempo real e cache offline (inclui `FirestoreSocialRepository`)
 - Retrofit: `QuoteRepositoryImpl` chama a API ZenQuotes com fallback local
 
 **Camada Presentation** (`presentation/`)  
 Interface do usuário desacoplada da lógica de negócio:
-- 7 ViewModels com `StateFlow` para estado reativo (incluindo `AnalyticsViewModel`)
+- 8 ViewModels com `StateFlow` para estado reativo (incluindo `AnalyticsViewModel` e `SocialViewModel`)
 - Composables observam estado e disparam eventos — sem lógica de negócio na UI
 - `SnackbarHostState` para feedback não-intrusivo em todas as telas
 
@@ -91,10 +92,15 @@ users/{uid}/
 ├── (documento: perfil do usuário — inclui coins)
 ├── transactions/{transactionId}
 ├── goals/{goalId}
-└── challenges/{challengeId}
+├── challenges/{challengeId}
+├── friends/{friendUid}          # amigos aceitos (perfil público cacheado)
+└── feed/{feedId}                # atividades do usuário
+
+publicProfiles/{uid}             # perfil público para busca por código
+friendRequests/{fromUid_toUid}   # pedidos de amizade pendentes
 ```
 
-Cada repositório Firestore utiliza o padrão `callbackFlow { addSnapshotListener { ... } }` para expor as atualizações em tempo real como `Flow`. O Firestore tem cache offline habilitado por padrão.
+Cada repositório Firestore utiliza o padrão `callbackFlow { addSnapshotListener { ... } }` para expor as atualizações em tempo real como `Flow`. O Firestore tem cache offline habilitado por padrão. Os listeners usam `close()` (sem propagar exceção) para evitar crash por `PERMISSION_DENIED` ao fazer logout.
 
 **Justificativa para uso do Firestore além do Room:**  
 O Room atende ao requisito acadêmico de persistência local. O Firestore foi adicionado para oferecer sincronização entre dispositivos, login multi-usuário e dados persistentes após reinstalação.
@@ -143,6 +149,8 @@ Todos os erros Firebase são mapeados para mensagens em português em `mapFireba
 | `StateFlow` + `MutableStateFlow` | Estado único e imutável por ViewModel |
 | `combine { }` | Mesclar múltiplos flows no AnalyticsViewModel e DashboardViewModel |
 | `_state.update { }` | Atualização atômica e thread-safe do estado |
+| `AuthStateListener` | Detectar troca de conta e reiniciar listeners no SocialViewModel |
+| `Job.cancel()` | Cancelar coroutines de listeners antigos ao trocar de conta |
 
 ---
 
@@ -201,8 +209,9 @@ splash → onboarding → login
 - `FirebaseAuth` e `FirebaseFirestore` — instâncias Firebase
 - `OkHttpClient`, `Retrofit`, `QuoteApi` — stack Retrofit
 - Bind de interfaces de repositório para suas implementações Firestore
+- `SocialRepository` → `FirestoreSocialRepository` (amigos, pedidos, feed, perfis públicos)
 
-ViewModels anotados com `@HiltViewModel` e injetados nas telas via `hiltViewModel()`.
+ViewModels anotados com `@HiltViewModel` e injetados nas telas via `hiltViewModel()`. O `SocialViewModel` recebe `FirebaseAuth` diretamente para observar mudanças de conta via `AuthStateListener`.
 
 ---
 
@@ -290,7 +299,57 @@ Tela exclusiva que processa e exibe dados financeiros avançados sem dependênci
 
 ---
 
-## 10. Tratamento de Erros
+## 10. Sistema Social
+
+### 10.1 Arquitetura
+
+O módulo social é composto por `SocialRepository` (interface), `FirestoreSocialRepository` (implementação) e `SocialViewModel`, com três coleções Firestore:
+
+- **`publicProfiles/{uid}`** — perfil público sincronizado automaticamente a cada login, contendo nome, código do usuário, nível e XP. Permite busca por código sem expor dados privados.
+- **`friendRequests/{fromUid_toUid}`** — pedidos de amizade pendentes. O ID do documento é composto (`${remetenteUid}_${destinatarioUid}`) para evitar composite indexes e permitir verificação de existência com leitura direta.
+- **`users/{uid}/friends/{friendUid}`** — subcoleção de amigos aceitos, armazenando o perfil público cacheado do amigo.
+
+### 10.2 Fluxo de Pedidos de Amizade
+
+```
+Usuário A busca código → encontra Usuário B → envia pedido
+    ↓
+friendRequests/{A_B} criado com status "pending"
+    ↓
+Usuário B vê pedido em "Pedidos de Amizade" (query: toUid == B)
+    ↓
+Usuário B aceita:
+  1. Adiciona A em B/friends (escrita própria)
+  2. Adiciona B em A/friends (escrita cruzada — regra Firestore: auth.uid == friendId)
+  3. Deleta friendRequests/{A_B}
+  4. Deleta friendRequests/{B_A} se existir (limpeza de pedido reverso)
+```
+
+Validações no envio: já são amigos (`already_friends`), pedido já enviado (`already_sent`), outra pessoa já enviou pedido (`has_incoming`). Mensagens de erro em português exibidas via Snackbar.
+
+### 10.3 Listeners em Tempo Real
+
+O `SocialViewModel` coleta 5 flows simultâneos: `getUser`, `getFriends`, `getIncomingRequests`, `getSentRequests` e `getFeed`. Cada flow é um `callbackFlow` com `addSnapshotListener` do Firestore.
+
+### 10.4 Troca de Conta (AuthStateListener)
+
+Para evitar dados de outra conta persistindo na tela Social, o `SocialViewModel` registra um `FirebaseAuth.AuthStateListener`. Quando o UID muda (logout/login com outra conta):
+
+1. Todos os `Job`s dos listeners são cancelados
+2. O estado é resetado para `SocialState()` (vazio)
+3. Novos listeners são criados com o UID da nova conta
+
+Isso garante isolamento completo entre contas, mesmo que o ViewModel não seja destruído pela navegação.
+
+### 10.5 Regras Firestore do Sistema Social
+
+- `publicProfiles/{uid}`: leitura para qualquer autenticado; escrita apenas pelo dono
+- `friendRequests/{requestId}`: leitura para qualquer autenticado; criação apenas se `fromUid == auth.uid`; deleção para qualquer autenticado
+- `users/{userId}/friends/{friendId}`: leitura pelo dono; escrita pelo dono **ou** pelo amigo (`auth.uid == friendId`) — necessário para a escrita cruzada ao aceitar pedido
+
+---
+
+## 11. Tratamento de Erros
 
 - Validação de formulários nos ViewModels antes de qualquer operação de I/O
 - `try-catch` em todos os métodos que acessam repositórios
@@ -302,7 +361,7 @@ Tela exclusiva que processa e exibe dados financeiros avançados sem dependênci
 
 ---
 
-## 11. Publicação e Distribuição
+## 12. Publicação e Distribuição
 
 O aplicativo foi empacotado como **Android App Bundle (AAB) assinado** (`app-release.aab`, ~21 MB) seguindo as exigências da Google Play Store.
 
@@ -316,7 +375,7 @@ O ícone do aplicativo segue os padrões visuais do Android: fundo preto com log
 
 ---
 
-## 12. Desafios e Soluções
+## 13. Desafios e Soluções
 
 **UI consistente em dark mode permanente**  
 Solução: `CresUpColorScheme` customizado baseado em tokens Tailwind CSS (`#050505`, `#A3E635`, `#A1A1AA`), aplicado diretamente nos Composables sem depender das cores geradas pelo Material You.
@@ -338,6 +397,15 @@ Solução: `AnalyticsViewModel.buildInsights()` computa regras determinísticas 
 
 **Backward-compatibility ao adicionar campos ao Firestore**  
 Solução: todos os novos campos (`coins`, `difficulty`) usam `?: 0` / `?: MEDIUM` como fallback nos mappers, garantindo que documentos antigos funcionem sem migração.
+
+**Crash ao fazer logout com listeners Firestore ativos**  
+Todos os `callbackFlow` usavam `close(err)` ao receber erro do `SnapshotListener`, propagando `PERMISSION_DENIED` como exceção fatal quando o `signOut()` invalidava as credenciais. Solução: alterar para `close()` (sem exceção) em todos os 7 callbackFlows dos 5 repositórios Firestore, encerrando o flow silenciosamente.
+
+**Dados de outra conta persistindo na aba Social após troca de conta**  
+O `SocialViewModel` configurava listeners no `init {}` com o UID da primeira conta; ao fazer logout e login com outra conta, os listeners antigos permaneciam ativos com o UID anterior. Solução: `FirebaseAuth.AuthStateListener` detecta mudança de UID, cancela todos os `Job`s dos listeners anteriores, reseta o estado e cria novos listeners com o UID correto.
+
+**Escrita cruzada entre usuários ao aceitar amizade**  
+Ao aceitar um pedido, o aceitante precisa escrever na subcoleção `friends` do remetente (outro usuário). Solução: regra Firestore que permite escrita em `users/{userId}/friends/{friendId}` quando `auth.uid == friendId`, combinada com `runCatching` para falha não-fatal caso a escrita cruzada falhe.
 
 **Integridade de XP nos desafios — off-by-one + race condition**  
 Três bugs interagiam para permitir acúmulo indevido de XP: (1) off-by-one em `incrementProgress` — após `dao.incrementProgress(id)` o valor já estava incrementado, mas o código somava `+1` novamente na comparação, concluindo o desafio um dia antes do prazo; (2) leitura de estado stale — o ViewModel lia `_state.value` imediatamente após o suspend do repositório, antes do Flow emitir o novo dado, fazendo vários taps simultâneos lerem o mesmo `progressCurrent` e cada um conceder XP; (3) guarda insuficiente contra double-tap — a verificação `challenge.isCompleted` usava o objeto recebido do Composable (stale), permitindo múltiplos coroutines concorrentes no mesmo desafio. Solução: `incrementProgress` passa a retornar `Boolean` indicando conclusão; o XP é concedido com base nesse retorno direto (sem leitura de estado stale); e `processingIds: MutableSet<Long>` no ViewModel bloqueia chamadas concorrentes para o mesmo desafio via `MutableSet.add` atômico antes do `launch`.

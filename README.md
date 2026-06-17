@@ -70,15 +70,15 @@ app/src/main/java/com/cresup/app/
 │   └── repository/     # Implementações dos repositórios
 ├── di/                 # AppModule (Hilt)
 ├── domain/
-│   ├── model/          # User, Transaction, Goal, Challenge, Achievement
+│   ├── model/          # User, Transaction, Goal, Challenge, Achievement, PublicProfile, FriendRequest, FeedItem
 │   └── repository/     # Interfaces dos repositórios
 └── presentation/
     ├── ui/
     │   ├── components/  # GlassCard, TransactionItem, CurrencyVisualTransformation
     │   ├── navigation/  # NavGraph, CresUpBottomNav
-    │   ├── screens/     # dashboard, gastos, metas, desafios, perfil, analytics, auth, onboarding, splash
+    │   ├── screens/     # dashboard, gastos, metas, desafios, perfil, analytics, social, auth, onboarding, splash
     │   └── theme/       # Color, Type, Theme
-    └── viewmodel/       # AuthVM, DashboardVM, GastosVM, MetasVM, DesafiosVM, PerfilVM, AnalyticsVM
+    └── viewmodel/       # AuthVM, DashboardVM, GastosVM, MetasVM, DesafiosVM, PerfilVM, AnalyticsVM, SocialVM
 ```
 
 ## Funcionalidades
@@ -113,6 +113,17 @@ app/src/main/java/com/cresup/app/
 - Ícones exclusivos por desafio (sem emojis)
 - Progresso geral no cabeçalho
 - Recompensa de XP variável ao concluir
+
+### Social
+- **Pedidos de amizade** com fluxo completo: enviar, aceitar ou recusar
+- Busca de amigos por código exclusivo (ex: `CRES-AB12`)
+- Seção "Pedidos de Amizade" com badge de contagem e botões Aceitar / Recusar
+- Seção "Enviados" com status pendente
+- Lista de amigos aceitos com nível e XP
+- **Ranking** entre amigos ordenado por XP
+- **Feed de atividades** com eventos de desafios, conquistas e level-ups
+- Perfil público sincronizado automaticamente (`publicProfiles`)
+- Detecção automática de troca de conta via `AuthStateListener`
 
 ### Análises *(tela exclusiva)*
 - Cards de métricas: receita, gastos, taxa de economia, média diária
@@ -186,6 +197,8 @@ app/src/main/java/com/cresup/app/
 - Estados de vazio com ilustrações em todas as telas
 - Erros Firebase mapeados para mensagens em português
 - Guarda de processamento nos desafios (`processingIds`) para evitar double-tap e race conditions
+- Listeners Firestore usam `close()` sem propagar exceção ao encerrar (evita crash no logout)
+- `AuthStateListener` no SocialViewModel reinicia listeners ao trocar de conta
 
 ## Distribuição
 

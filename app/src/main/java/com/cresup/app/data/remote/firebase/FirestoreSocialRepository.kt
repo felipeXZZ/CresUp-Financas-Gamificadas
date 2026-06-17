@@ -147,29 +147,17 @@ class FirestoreSocialRepository @Inject constructor(
     override suspend fun sendFriendRequest(toProfile: PublicProfile, myProfile: PublicProfile) {
         if (uid.isEmpty()) return
         val requestId = "${uid}_${toProfile.uid}"
-        val reverseId = "${toProfile.uid}_${uid}"
 
         val friendSnap = friendsCol.document(toProfile.uid).get().await()
-        if (friendSnap.exists()) return
+        if (friendSnap.exists()) throw Exception("already_friends")
 
         val existing = requestsCol.document(requestId).get().await()
-        if (existing.exists()) return
+        if (existing.exists()) throw Exception("already_sent")
 
+        val reverseId = "${toProfile.uid}_${uid}"
         val reverse = requestsCol.document(reverseId).get().await()
         if (reverse.exists() && reverse.getString("status") == "pending") {
-            acceptRequest(
-                FriendRequest(
-                    id = reverseId,
-                    fromUid = toProfile.uid,
-                    toUid = uid,
-                    fromName = toProfile.name,
-                    fromCode = toProfile.userCode,
-                    fromLevel = toProfile.level,
-                    fromLevelName = toProfile.levelName,
-                    fromXp = toProfile.xp
-                )
-            )
-            return
+            throw Exception("has_incoming")
         }
 
         requestsCol.document(requestId).set(
@@ -228,6 +216,9 @@ class FirestoreSocialRepository @Inject constructor(
         }
 
         requestsCol.document(request.id).delete().await()
+
+        val reverseId = "${uid}_${request.fromUid}"
+        runCatching { requestsCol.document(reverseId).delete().await() }
     }
 
     override suspend fun rejectRequest(requestId: String) {

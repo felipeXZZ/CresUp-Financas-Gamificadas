@@ -7,7 +7,9 @@ import com.cresup.app.domain.model.FriendRequest
 import com.cresup.app.domain.model.PublicProfile
 import com.cresup.app.domain.repository.SocialRepository
 import com.cresup.app.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,16 +30,43 @@ data class SocialState(
 @HiltViewModel
 class SocialViewModel @Inject constructor(
     private val socialRepository: SocialRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SocialState())
     val state: StateFlow<SocialState> = _state.asStateFlow()
 
+    private var socialJobs = mutableListOf<Job>()
+    private var currentUid: String? = null
     private var hasSynced = false
 
+    private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+        val newUid = firebaseAuth.currentUser?.uid
+        if (newUid != currentUid) {
+            currentUid = newUid
+            hasSynced = false
+            restartListeners()
+        }
+    }
+
     init {
-        viewModelScope.launch {
+        auth.addAuthStateListener(authListener)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        auth.removeAuthStateListener(authListener)
+    }
+
+    private fun restartListeners() {
+        socialJobs.forEach { it.cancel() }
+        socialJobs.clear()
+        _state.value = SocialState()
+
+        if (currentUid == null) return
+
+        socialJobs += viewModelScope.launch {
             userRepository.getUser().collect { user ->
                 val profile = PublicProfile(
                     uid = "",
@@ -54,22 +83,22 @@ class SocialViewModel @Inject constructor(
                 }
             }
         }
-        viewModelScope.launch {
+        socialJobs += viewModelScope.launch {
             socialRepository.getFriends().collect { friends ->
                 _state.update { it.copy(friends = friends) }
             }
         }
-        viewModelScope.launch {
+        socialJobs += viewModelScope.launch {
             socialRepository.getIncomingRequests().collect { requests ->
                 _state.update { it.copy(incomingRequests = requests) }
             }
         }
-        viewModelScope.launch {
+        socialJobs += viewModelScope.launch {
             socialRepository.getSentRequests().collect { requests ->
                 _state.update { it.copy(sentRequests = requests) }
             }
         }
-        viewModelScope.launch {
+        socialJobs += viewModelScope.launch {
             socialRepository.getFeed().collect { feed ->
                 _state.update { it.copy(feed = feed) }
             }
@@ -112,7 +141,13 @@ class SocialViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(errorMessage = "Erro ao enviar pedido") }
+                val msg = when (e.message) {
+                    "already_friends" -> "Vocês já são amigos!"
+                    "already_sent" -> "Pedido já enviado!"
+                    "has_incoming" -> "Essa pessoa já te enviou um pedido! Aceite na aba Amigos."
+                    else -> "Erro ao enviar pedido"
+                }
+                _state.update { it.copy(searchResult = null, searchCode = "", errorMessage = msg) }
             }
         }
     }
