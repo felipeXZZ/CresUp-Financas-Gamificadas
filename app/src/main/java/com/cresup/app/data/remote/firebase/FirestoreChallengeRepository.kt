@@ -21,7 +21,7 @@ class FirestoreChallengeRepository @Inject constructor(
 
     override fun getAllChallenges(): Flow<List<Challenge>> = callbackFlow {
         val reg = col.addSnapshotListener { snap, err ->
-            if (err != null) { close(err); return@addSnapshotListener }
+            if (err != null) { close(); return@addSnapshotListener }
             val list = snap?.documents?.map { it.toChallenge() } ?: emptyList()
             trySend(list.sortedBy { it.id })
         }

@@ -23,7 +23,7 @@ class FirestoreTransactionRepository @Inject constructor(
     override fun getAllTransactions(): Flow<List<Transaction>> = callbackFlow {
         val reg = col.orderBy("date", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, err ->
-                if (err != null) { close(err); return@addSnapshotListener }
+                if (err != null) { close(); return@addSnapshotListener }
                 val list = snap?.documents?.mapNotNull { it.toTransaction() } ?: emptyList()
                 trySend(list)
             }
@@ -43,7 +43,7 @@ class FirestoreTransactionRepository @Inject constructor(
             .whereLessThanOrEqualTo("date", end)
             .orderBy("date", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, err ->
-                if (err != null) { close(err); return@addSnapshotListener }
+                if (err != null) { close(); return@addSnapshotListener }
                 val list = snap?.documents?.mapNotNull { it.toTransaction() } ?: emptyList()
                 trySend(list)
             }

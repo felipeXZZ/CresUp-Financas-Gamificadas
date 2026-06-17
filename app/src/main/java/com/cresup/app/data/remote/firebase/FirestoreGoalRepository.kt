@@ -22,7 +22,7 @@ class FirestoreGoalRepository @Inject constructor(
     override fun getAllGoals(): Flow<List<Goal>> = callbackFlow {
         val reg = col.orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, err ->
-                if (err != null) { close(err); return@addSnapshotListener }
+                if (err != null) { close(); return@addSnapshotListener }
                 val list = snap?.documents?.map { it.toGoal() } ?: emptyList()
                 trySend(list)
             }

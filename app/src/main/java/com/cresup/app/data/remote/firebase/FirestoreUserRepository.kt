@@ -23,7 +23,7 @@ class FirestoreUserRepository @Inject constructor(
 
     override fun getUser(): Flow<User> = callbackFlow {
         val reg = userDoc.addSnapshotListener { snap, err ->
-            if (err != null) { close(err); return@addSnapshotListener }
+            if (err != null) { close(); return@addSnapshotListener }
             val user = if (snap != null && snap.exists()) {
                 snap.toUser()
             } else {

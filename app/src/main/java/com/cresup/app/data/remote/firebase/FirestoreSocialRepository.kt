@@ -25,7 +25,7 @@ class FirestoreSocialRepository @Inject constructor(
 
     override fun getFriends(): Flow<List<PublicProfile>> = callbackFlow {
         val reg = friendsCol.addSnapshotListener { snap, err ->
-            if (err != null) { close(err); return@addSnapshotListener }
+            if (err != null) { close(); return@addSnapshotListener }
             val list = snap?.documents?.mapNotNull { doc ->
                 runCatching {
                     PublicProfile(
@@ -48,7 +48,7 @@ class FirestoreSocialRepository @Inject constructor(
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(30)
             .addSnapshotListener { snap, err ->
-                if (err != null) { close(err); return@addSnapshotListener }
+                if (err != null) { close(); return@addSnapshotListener }
                 val list = snap?.documents?.mapNotNull { doc ->
                     runCatching {
                         FeedItem(
