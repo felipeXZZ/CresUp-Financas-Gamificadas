@@ -29,6 +29,7 @@ import com.cresup.app.domain.model.TransactionType
 import com.cresup.app.presentation.ui.components.CurrencyVisualTransformation
 import com.cresup.app.presentation.ui.components.GlassCard
 import com.cresup.app.presentation.ui.components.TransactionItem
+import com.cresup.app.presentation.ui.components.categoryIcon
 import com.cresup.app.presentation.ui.screens.dashboard.formatCurrency
 import com.cresup.app.presentation.ui.theme.*
 import com.cresup.app.presentation.viewmodel.GastosViewModel
@@ -355,7 +356,12 @@ private fun CategoryChip(
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = category.emoji, fontSize = 18.sp)
+        Icon(
+            imageVector = categoryIcon(category),
+            contentDescription = null,
+            tint = if (selected) category.color else TextMuted,
+            modifier = Modifier.size(20.dp)
+        )
         Text(
             text = category.label,
             fontSize = 9.sp,

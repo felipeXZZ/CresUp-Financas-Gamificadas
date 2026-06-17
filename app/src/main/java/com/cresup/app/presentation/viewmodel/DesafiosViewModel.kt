@@ -52,14 +52,14 @@ class DesafiosViewModel @Inject constructor(
 
     fun progressChallenge(challenge: Challenge) {
         if (!challenge.isActive || challenge.isCompleted) return
-        if (!processingIds.add(challenge.id)) return  // já em processamento, bloqueia double-tap
+        if (!processingIds.add(challenge.id)) return
         viewModelScope.launch {
             try {
                 val completed = challengeRepository.incrementProgress(challenge.id)
                 if (completed) {
                     userRepository.addXP(challenge.xpReward)
-                    val userName = userRepository.getUser().first().name
                     runCatching {
+                        val userName = userRepository.getUser().first().name
                         socialRepository.postToMyFeed(
                             FeedItem(
                                 type = FeedItemType.CHALLENGE,
@@ -71,6 +71,8 @@ class DesafiosViewModel @Inject constructor(
                     }
                     _state.update { it.copy(successMessage = "Desafio concluído! +${challenge.xpReward} XP") }
                 }
+            } catch (e: Exception) {
+                _state.update { it.copy(errorMessage = "Erro ao registrar progresso") }
             } finally {
                 processingIds.remove(challenge.id)
             }

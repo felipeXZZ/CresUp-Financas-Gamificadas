@@ -52,16 +52,18 @@ class FirestoreUserRepository @Inject constructor(
                 "xpToNextLevel" to xpToNextLevel(level)
             )
         ).await()
-        profilesCol.document(uid).set(
-            mapOf(
-                "uid" to uid,
-                "name" to current.name,
-                "userCode" to current.userCode,
-                "level" to level,
-                "levelName" to levelName,
-                "xp" to newXp
-            )
-        ).await()
+        runCatching {
+            profilesCol.document(uid).set(
+                mapOf(
+                    "uid" to uid,
+                    "name" to current.name,
+                    "userCode" to current.userCode,
+                    "level" to level,
+                    "levelName" to levelName,
+                    "xp" to newXp
+                )
+            ).await()
+        }
     }
 
     override suspend fun updateStreak() { }
@@ -74,16 +76,18 @@ class FirestoreUserRepository @Inject constructor(
             val code = generateUserCode()
             val user = User(name = name, userCode = code)
             userDoc.set(user.toMap()).await()
-            profilesCol.document(uid).set(
-                mapOf(
-                    "uid" to uid,
-                    "name" to name,
-                    "userCode" to code,
-                    "level" to 1,
-                    "levelName" to "Poupador Iniciante",
-                    "xp" to 0
-                )
-            ).await()
+            runCatching {
+                profilesCol.document(uid).set(
+                    mapOf(
+                        "uid" to uid,
+                        "name" to name,
+                        "userCode" to code,
+                        "level" to 1,
+                        "levelName" to "Poupador Iniciante",
+                        "xp" to 0
+                    )
+                ).await()
+            }
         }
     }
 

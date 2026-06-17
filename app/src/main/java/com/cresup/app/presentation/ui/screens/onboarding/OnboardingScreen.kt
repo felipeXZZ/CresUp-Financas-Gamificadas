@@ -1,6 +1,5 @@
 package com.cresup.app.presentation.ui.screens.onboarding
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,12 +7,15 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,35 +27,40 @@ import com.cresup.app.presentation.ui.theme.*
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
-    val emoji: String,
+    val icon: ImageVector,
     val title: String,
     val subtitle: String,
+    val iconColor: androidx.compose.ui.graphics.Color,
     val gradient: List<androidx.compose.ui.graphics.Color>
 )
 
 val onboardingPages = listOf(
     OnboardingPage(
-        emoji = "📊",
+        icon = Icons.Filled.BarChart,
         title = "Controle seus gastos",
         subtitle = "Registre receitas e despesas com categorias modernas e visualize para onde seu dinheiro vai.",
+        iconColor = NeonGreen,
         gradient = listOf(GreenDark.copy(0.25f), Background)
     ),
     OnboardingPage(
-        emoji = "🎯",
+        icon = Icons.Filled.Flag,
         title = "Crie metas financeiras",
         subtitle = "Defina objetivos — viagem, setup gamer, iPhone — e acompanhe seu progresso em tempo real.",
+        iconColor = NeonGreen,
         gradient = listOf(NeonGreen.copy(0.15f), Background)
     ),
     OnboardingPage(
-        emoji = "🏆",
+        icon = Icons.Filled.EmojiEvents,
         title = "Evolua e ganhe XP",
         subtitle = "Ganhe experiência ao registrar gastos, bater metas e manter streaks. Suba de nível financeiramente!",
+        iconColor = AccentYellow,
         gradient = listOf(AccentYellow.copy(0.15f), Background)
     ),
     OnboardingPage(
-        emoji = "⚡",
+        icon = Icons.Filled.Bolt,
         title = "Aceite desafios",
         subtitle = "Complete desafios financeiros, desbloqueie conquistas e transforme sua relação com o dinheiro.",
+        iconColor = NeonGreenDim,
         gradient = listOf(NeonGreenDim.copy(0.2f), Background)
     )
 )
@@ -93,7 +100,20 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                         modifier = Modifier.size(72.dp)
                     )
                     Spacer(Modifier.height(32.dp))
-                    Text(text = data.emoji, fontSize = 72.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(96.dp)
+                            .clip(CircleShape)
+                            .background(data.iconColor.copy(0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = data.icon,
+                            contentDescription = null,
+                            tint = data.iconColor,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
                     Spacer(Modifier.height(28.dp))
                     Text(
                         text = data.title,
@@ -165,8 +185,15 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
                     shape = RoundedCornerShape(16.dp)
                 ) {
+                    Icon(
+                        Icons.Filled.RocketLaunch,
+                        contentDescription = null,
+                        tint = Background,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        "Vamos Começar! 🚀",
+                        "Vamos Começar",
                         color = Background,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
