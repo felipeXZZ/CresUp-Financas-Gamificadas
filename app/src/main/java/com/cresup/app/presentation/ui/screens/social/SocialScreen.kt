@@ -1,6 +1,5 @@
 package com.cresup.app.presentation.ui.screens.social
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -24,12 +23,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cresup.app.domain.model.FeedItem
 import com.cresup.app.domain.model.FeedItemType
+import com.cresup.app.domain.model.FriendRequest
 import com.cresup.app.domain.model.PublicProfile
 import com.cresup.app.presentation.ui.components.GlassCard
 import com.cresup.app.presentation.ui.screens.dashboard.levelColor
@@ -83,16 +84,68 @@ fun SocialScreen(viewModel: SocialViewModel = hiltViewModel()) {
             item { SocialHeader(userCode = state.currentUser.userCode) }
 
             item {
-                SocialTabRow(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+                SocialTabRow(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                    incomingCount = state.incomingRequests.size
+                )
             }
 
             when (selectedTab) {
                 0 -> {
-                    if (state.friends.isEmpty()) {
+                    val hasContent = state.incomingRequests.isNotEmpty() ||
+                            state.sentRequests.isNotEmpty() ||
+                            state.friends.isNotEmpty()
+
+                    if (!hasContent) {
                         item { EmptyFriendsCard(onAdd = { showAddDialog = true }) }
                     } else {
-                        itemsIndexed(state.friends) { _, friend ->
-                            FriendCard(friend = friend, onRemove = { viewModel.removeFriend(friend.uid) })
+                        if (state.incomingRequests.isNotEmpty()) {
+                            item {
+                                SectionHeader(
+                                    title = "Pedidos de Amizade",
+                                    count = state.incomingRequests.size,
+                                    color = AccentOrange
+                                )
+                            }
+                            itemsIndexed(state.incomingRequests) { _, request ->
+                                IncomingRequestCard(
+                                    request = request,
+                                    onAccept = { viewModel.acceptRequest(request) },
+                                    onReject = { viewModel.rejectRequest(request) }
+                                )
+                            }
+                        }
+
+                        if (state.sentRequests.isNotEmpty()) {
+                            item {
+                                SectionHeader(
+                                    title = "Enviados",
+                                    count = state.sentRequests.size,
+                                    color = TextMuted
+                                )
+                            }
+                            itemsIndexed(state.sentRequests) { _, request ->
+                                SentRequestCard(request = request)
+                            }
+                        }
+
+                        if (state.friends.isNotEmpty()) {
+                            if (state.incomingRequests.isNotEmpty() || state.sentRequests.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        title = "Amigos",
+                                        count = state.friends.size,
+                                        color = NeonGreen
+                                    )
+                                }
+                            }
+                            itemsIndexed(state.friends) { _, friend ->
+                                FriendCard(
+                                    friend = friend,
+                                    onRemove = { viewModel.removeFriend(friend.uid) }
+                                )
+                            }
                         }
                     }
                 }
@@ -130,7 +183,7 @@ fun SocialScreen(viewModel: SocialViewModel = hiltViewModel()) {
             isSearching = state.isSearching,
             searchResult = state.searchResult,
             errorMessage = state.errorMessage,
-            onAddFriend = { viewModel.addFriend(it); showAddDialog = false },
+            onSendRequest = { viewModel.sendFriendRequest(it); showAddDialog = false },
             onDismiss = { showAddDialog = false; viewModel.clearSearch() }
         )
     }
@@ -192,7 +245,7 @@ private fun SocialHeader(userCode: String) {
 }
 
 @Composable
-private fun SocialTabRow(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+private fun SocialTabRow(selectedTab: Int, onTabSelected: (Int) -> Unit, incomingCount: Int) {
     val tabs = listOf("Amigos", "Ranking", "Feed")
     Row(
         modifier = Modifier
@@ -218,13 +271,155 @@ private fun SocialTabRow(selectedTab: Int, onTabSelected: (Int) -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 TextButton(onClick = { onTabSelected(index) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        label,
-                        fontSize = 13.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) NeonGreen else TextMuted
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            label,
+                            fontSize = 13.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selected) NeonGreen else TextMuted
+                        )
+                        if (index == 0 && incomingCount > 0) {
+                            Badge(
+                                containerColor = AccentOrange,
+                                contentColor = Background
+                            ) {
+                                Text(
+                                    incomingCount.toString(),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, count: Int, color: Color) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = color)
+        Badge(containerColor = color.copy(0.2f), contentColor = color) {
+            Text(count.toString(), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun IncomingRequestCard(
+    request: FriendRequest,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
+) {
+    GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(AccentOrange.copy(0.15f))
+                            .border(2.dp, AccentOrange.copy(0.5f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.PersonAdd, null, tint = AccentOrange, modifier = Modifier.size(22.dp))
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(request.fromName, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(request.fromCode, fontSize = 11.sp, color = TextMuted)
+                            Text("·", fontSize = 11.sp, color = TextMuted)
+                            Text(request.fromLevelName, fontSize = 11.sp, color = levelColor(request.fromLevel))
+                        }
+                    }
+                }
+                Text("${request.fromXp} XP", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = AccentYellow)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+            ) {
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextMuted),
+                    border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = Brush.linearGradient(listOf(CardBorder, CardBorder))),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Filled.Close, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Recusar", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = onAccept,
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Filled.Check, null, tint = Background, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Aceitar", color = Background, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SentRequestCard(request: FriendRequest) {
+    GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(TextMuted.copy(0.1f))
+                        .border(2.dp, TextMuted.copy(0.3f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Person, null, tint = TextMuted, modifier = Modifier.size(22.dp))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(request.toName, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    Text(request.toCode, fontSize = 11.sp, color = TextMuted)
+                }
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Filled.Schedule, null, tint = AccentYellow, modifier = Modifier.size(14.dp))
+                Text("Pendente", fontSize = 12.sp, color = AccentYellow, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -281,9 +476,7 @@ private fun RankingCard(position: Int, profile: PublicProfile, isCurrentUser: Bo
         else -> TextMuted
     }
     val medal = when (position) {
-        1 -> Icons.Filled.EmojiEvents
-        2 -> Icons.Filled.EmojiEvents
-        3 -> Icons.Filled.EmojiEvents
+        1, 2, 3 -> Icons.Filled.EmojiEvents
         else -> null
     }
 
@@ -305,30 +498,20 @@ private fun RankingCard(position: Int, profile: PublicProfile, isCurrentUser: Bo
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Box(
-                    modifier = Modifier.size(36.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
                     if (medal != null) {
                         Icon(medal, null, tint = positionColor, modifier = Modifier.size(28.dp))
                     } else {
-                        Text(
-                            "#$position",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextMuted
-                        )
+                        Text("#$position", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextMuted)
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            if (isCurrentUser) "${profile.name} (você)" else profile.name,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isCurrentUser) NeonGreen else TextPrimary
-                        )
-                    }
+                    Text(
+                        if (isCurrentUser) "${profile.name} (você)" else profile.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isCurrentUser) NeonGreen else TextPrimary
+                    )
                     Text(
                         "Nível ${profile.level} · ${profile.levelName}",
                         fontSize = 11.sp,
@@ -356,10 +539,7 @@ private fun FeedItemCard(item: FeedItem) {
     }
 
     GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
             Box(
                 modifier = Modifier
                     .size(38.dp)
@@ -369,19 +549,12 @@ private fun FeedItemCard(item: FeedItem) {
             ) {
                 Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
             }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(item.actorName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Text(item.message, fontSize = 13.sp, color = TextSecondary)
                 }
-                Text(
-                    formatTimestamp(item.timestamp),
-                    fontSize = 10.sp,
-                    color = TextMuted
-                )
+                Text(formatTimestamp(item.timestamp), fontSize = 10.sp, color = TextMuted)
             }
         }
     }
@@ -409,7 +582,7 @@ private fun EmptyFriendsCard(onAdd: () -> Unit) {
                 "Compartilhe seu código com amigos e compita no ranking",
                 fontSize = 13.sp,
                 color = TextSecondary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             Button(
                 onClick = onAdd,
@@ -461,7 +634,7 @@ private fun AddFriendDialog(
     isSearching: Boolean,
     searchResult: PublicProfile?,
     errorMessage: String?,
-    onAddFriend: (PublicProfile) -> Unit,
+    onSendRequest: (PublicProfile) -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -514,11 +687,13 @@ private fun AddFriendDialog(
                             Text("Nível ${searchResult.level} · ${searchResult.userCode}", fontSize = 11.sp, color = TextSecondary)
                         }
                         Button(
-                            onClick = { onAddFriend(searchResult) },
+                            onClick = { onSendRequest(searchResult) },
                             colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Adicionar", color = Background, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Icon(Icons.Filled.Send, null, tint = Background, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Enviar", color = Background, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
                 }

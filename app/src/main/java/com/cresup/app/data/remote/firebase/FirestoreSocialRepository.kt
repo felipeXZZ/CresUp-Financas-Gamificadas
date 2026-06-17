@@ -2,6 +2,7 @@ package com.cresup.app.data.remote.firebase
 
 import com.cresup.app.domain.model.FeedItem
 import com.cresup.app.domain.model.FeedItemType
+import com.cresup.app.domain.model.FriendRequest
 import com.cresup.app.domain.model.PublicProfile
 import com.cresup.app.domain.repository.SocialRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -22,6 +23,7 @@ class FirestoreSocialRepository @Inject constructor(
     private val friendsCol get() = firestore.collection("users").document(uid).collection("friends")
     private val feedCol get() = firestore.collection("users").document(uid).collection("feed")
     private val profilesCol get() = firestore.collection("publicProfiles")
+    private val requestsCol get() = firestore.collection("friendRequests")
 
     override fun getFriends(): Flow<List<PublicProfile>> = callbackFlow {
         val reg = friendsCol.addSnapshotListener { snap, err ->
@@ -40,6 +42,60 @@ class FirestoreSocialRepository @Inject constructor(
             } ?: emptyList()
             trySend(list)
         }
+        awaitClose { reg.remove() }
+    }
+
+    override fun getIncomingRequests(): Flow<List<FriendRequest>> = callbackFlow {
+        val reg = requestsCol
+            .whereEqualTo("toUid", uid)
+            .addSnapshotListener { snap, err ->
+                if (err != null) { close(); return@addSnapshotListener }
+                val list = snap?.documents?.mapNotNull { doc ->
+                    runCatching {
+                        if (doc.getString("status") != "pending") return@mapNotNull null
+                        FriendRequest(
+                            id = doc.id,
+                            fromUid = doc.getString("fromUid") ?: return@mapNotNull null,
+                            toUid = doc.getString("toUid") ?: "",
+                            fromName = doc.getString("fromName") ?: "",
+                            fromCode = doc.getString("fromCode") ?: "",
+                            fromLevel = doc.getLong("fromLevel")?.toInt() ?: 1,
+                            fromLevelName = doc.getString("fromLevelName") ?: "Poupador Iniciante",
+                            fromXp = doc.getLong("fromXp")?.toInt() ?: 0,
+                            status = "pending",
+                            timestamp = doc.getLong("timestamp") ?: 0L
+                        )
+                    }.getOrNull()
+                } ?: emptyList()
+                trySend(list)
+            }
+        awaitClose { reg.remove() }
+    }
+
+    override fun getSentRequests(): Flow<List<FriendRequest>> = callbackFlow {
+        val reg = requestsCol
+            .whereEqualTo("fromUid", uid)
+            .addSnapshotListener { snap, err ->
+                if (err != null) { close(); return@addSnapshotListener }
+                val list = snap?.documents?.mapNotNull { doc ->
+                    runCatching {
+                        if (doc.getString("status") != "pending") return@mapNotNull null
+                        FriendRequest(
+                            id = doc.id,
+                            fromUid = doc.getString("fromUid") ?: "",
+                            toUid = doc.getString("toUid") ?: return@mapNotNull null,
+                            toName = doc.getString("toName") ?: "",
+                            toCode = doc.getString("toCode") ?: "",
+                            toLevel = doc.getLong("toLevel")?.toInt() ?: 1,
+                            toLevelName = doc.getString("toLevelName") ?: "Poupador Iniciante",
+                            toXp = doc.getLong("toXp")?.toInt() ?: 0,
+                            status = "pending",
+                            timestamp = doc.getLong("timestamp") ?: 0L
+                        )
+                    }.getOrNull()
+                } ?: emptyList()
+                trySend(list)
+            }
         awaitClose { reg.remove() }
     }
 
@@ -76,7 +132,7 @@ class FirestoreSocialRepository @Inject constructor(
                 .get()
                 .await()
             val doc = snap.documents.firstOrNull() ?: return null
-            if (doc.getString("uid") == uid) return null  // não adicionar a si mesmo
+            if (doc.getString("uid") == uid) return null
             PublicProfile(
                 uid = doc.getString("uid") ?: return null,
                 name = doc.getString("name") ?: "",
@@ -88,22 +144,102 @@ class FirestoreSocialRepository @Inject constructor(
         } catch (e: Exception) { null }
     }
 
-    override suspend fun addFriend(profile: PublicProfile) {
-        friendsCol.document(profile.uid).set(
+    override suspend fun sendFriendRequest(toProfile: PublicProfile, myProfile: PublicProfile) {
+        if (uid.isEmpty()) return
+        val requestId = "${uid}_${toProfile.uid}"
+        val reverseId = "${toProfile.uid}_${uid}"
+
+        val friendSnap = friendsCol.document(toProfile.uid).get().await()
+        if (friendSnap.exists()) return
+
+        val existing = requestsCol.document(requestId).get().await()
+        if (existing.exists()) return
+
+        val reverse = requestsCol.document(reverseId).get().await()
+        if (reverse.exists() && reverse.getString("status") == "pending") {
+            acceptRequest(
+                FriendRequest(
+                    id = reverseId,
+                    fromUid = toProfile.uid,
+                    toUid = uid,
+                    fromName = toProfile.name,
+                    fromCode = toProfile.userCode,
+                    fromLevel = toProfile.level,
+                    fromLevelName = toProfile.levelName,
+                    fromXp = toProfile.xp
+                )
+            )
+            return
+        }
+
+        requestsCol.document(requestId).set(
             mapOf(
-                "uid" to profile.uid,
-                "name" to profile.name,
-                "userCode" to profile.userCode,
-                "level" to profile.level,
-                "levelName" to profile.levelName,
-                "xp" to profile.xp,
-                "addedAt" to System.currentTimeMillis()
+                "fromUid" to uid,
+                "toUid" to toProfile.uid,
+                "fromName" to myProfile.name,
+                "fromCode" to myProfile.userCode,
+                "fromLevel" to myProfile.level,
+                "fromLevelName" to myProfile.levelName,
+                "fromXp" to myProfile.xp,
+                "toName" to toProfile.name,
+                "toCode" to toProfile.userCode,
+                "toLevel" to toProfile.level,
+                "toLevelName" to toProfile.levelName,
+                "toXp" to toProfile.xp,
+                "status" to "pending",
+                "timestamp" to System.currentTimeMillis()
             )
         ).await()
     }
 
+    override suspend fun acceptRequest(request: FriendRequest) {
+        friendsCol.document(request.fromUid).set(
+            mapOf(
+                "uid" to request.fromUid,
+                "name" to request.fromName,
+                "userCode" to request.fromCode,
+                "level" to request.fromLevel,
+                "levelName" to request.fromLevelName,
+                "xp" to request.fromXp,
+                "addedAt" to System.currentTimeMillis()
+            )
+        ).await()
+
+        val myProfile = profilesCol.document(uid).get().await()
+        val myName = myProfile.getString("name") ?: ""
+        val myCode = myProfile.getString("userCode") ?: ""
+        val myLevel = myProfile.getLong("level")?.toInt() ?: 1
+        val myLevelName = myProfile.getString("levelName") ?: ""
+        val myXp = myProfile.getLong("xp")?.toInt() ?: 0
+
+        runCatching {
+            firestore.collection("users").document(request.fromUid).collection("friends")
+                .document(uid).set(
+                    mapOf(
+                        "uid" to uid,
+                        "name" to myName,
+                        "userCode" to myCode,
+                        "level" to myLevel,
+                        "levelName" to myLevelName,
+                        "xp" to myXp,
+                        "addedAt" to System.currentTimeMillis()
+                    )
+                ).await()
+        }
+
+        requestsCol.document(request.id).delete().await()
+    }
+
+    override suspend fun rejectRequest(requestId: String) {
+        requestsCol.document(requestId).delete().await()
+    }
+
     override suspend fun removeFriend(friendUid: String) {
         friendsCol.document(friendUid).delete().await()
+        runCatching {
+            firestore.collection("users").document(friendUid).collection("friends")
+                .document(uid).delete().await()
+        }
     }
 
     override suspend fun syncPublicProfile(profile: PublicProfile) {
@@ -125,8 +261,7 @@ class FirestoreSocialRepository @Inject constructor(
     }
 
     override suspend fun postToMyFeed(item: FeedItem) {
-        val ref = feedCol.document()
-        ref.set(
+        feedCol.document().set(
             mapOf(
                 "type" to item.type.name,
                 "actorName" to item.actorName,

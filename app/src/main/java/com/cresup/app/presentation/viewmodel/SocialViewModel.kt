@@ -3,6 +3,7 @@ package com.cresup.app.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cresup.app.domain.model.FeedItem
+import com.cresup.app.domain.model.FriendRequest
 import com.cresup.app.domain.model.PublicProfile
 import com.cresup.app.domain.repository.SocialRepository
 import com.cresup.app.domain.repository.UserRepository
@@ -14,6 +15,8 @@ import javax.inject.Inject
 data class SocialState(
     val currentUser: PublicProfile = PublicProfile(),
     val friends: List<PublicProfile> = emptyList(),
+    val incomingRequests: List<FriendRequest> = emptyList(),
+    val sentRequests: List<FriendRequest> = emptyList(),
     val feed: List<FeedItem> = emptyList(),
     val searchCode: String = "",
     val searchResult: PublicProfile? = null,
@@ -57,6 +60,16 @@ class SocialViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            socialRepository.getIncomingRequests().collect { requests ->
+                _state.update { it.copy(incomingRequests = requests) }
+            }
+        }
+        viewModelScope.launch {
+            socialRepository.getSentRequests().collect { requests ->
+                _state.update { it.copy(sentRequests = requests) }
+            }
+        }
+        viewModelScope.launch {
             socialRepository.getFeed().collect { feed ->
                 _state.update { it.copy(feed = feed) }
             }
@@ -87,19 +100,41 @@ class SocialViewModel @Inject constructor(
         }
     }
 
-    fun addFriend(profile: PublicProfile) {
+    fun sendFriendRequest(toProfile: PublicProfile) {
         viewModelScope.launch {
             try {
-                socialRepository.addFriend(profile)
+                socialRepository.sendFriendRequest(toProfile, _state.value.currentUser)
                 _state.update {
                     it.copy(
                         searchResult = null,
                         searchCode = "",
-                        successMessage = "${profile.name} adicionado(a)!"
+                        successMessage = "Pedido enviado para ${toProfile.name}!"
                     )
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(errorMessage = "Erro ao adicionar amigo") }
+                _state.update { it.copy(errorMessage = "Erro ao enviar pedido") }
+            }
+        }
+    }
+
+    fun acceptRequest(request: FriendRequest) {
+        viewModelScope.launch {
+            try {
+                socialRepository.acceptRequest(request)
+                _state.update { it.copy(successMessage = "${request.fromName} adicionado(a)!") }
+            } catch (e: Exception) {
+                _state.update { it.copy(errorMessage = "Erro ao aceitar pedido") }
+            }
+        }
+    }
+
+    fun rejectRequest(request: FriendRequest) {
+        viewModelScope.launch {
+            try {
+                socialRepository.rejectRequest(request.id)
+                _state.update { it.copy(successMessage = "Pedido recusado") }
+            } catch (e: Exception) {
+                _state.update { it.copy(errorMessage = "Erro ao recusar") }
             }
         }
     }
