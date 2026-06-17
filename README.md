@@ -289,6 +289,11 @@ O relatório técnico detalhado do projeto está disponível em [RELATORIO_TECNI
   <img src="images/PRINT 3.png" width="210" />
   <img src="images/PRINT 4.png" width="210" />
 </p>
+<p align="center">
+  <img src="images/SOCIAL1.png" width="210" />
+  <img src="images/SOCIAL2.png" width="210" />
+  <img src="images/SOCIAL3.png" width="210" />
+</p>
 
 ## Autores
 
